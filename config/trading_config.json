@@ -1,0 +1,67 @@
+{
+  "system": {
+    "market": "NSE",
+    "segment": "CASH",
+    "timezone": "Asia/Kolkata",
+    "kill_switch_active": false,
+    "live_execution_allowed": false,
+    "paper_trading_mode": true
+  },
+  "scanner": {
+    "trend": {
+      "fast_ma_period": 50,
+      "slow_ma_period": 200,
+      "require_fast_above_slow": true,
+      "require_close_above_fast": true,
+      "require_close_above_slow": true
+    },
+    "breakout": {
+      "primary_lookback_days": 20,
+      "secondary_lookback_days": 50,
+      "breakout_buffer_pct": 0.0
+    },
+    "volume": {
+      "volume_ma_period": 20,
+      "min_surge_multiplier": 1.2
+    },
+    "relative_strength": {
+      "benchmark_symbol": "NIFTY 50",
+      "benchmark_company_name": "Nifty 50",
+      "rs_period_days": 20,
+      "min_rs_outperformance_pct": 0.0
+    },
+    "liquidity": {
+      "min_daily_turnover_inr": 50000000,
+      "max_bid_ask_spread_pct": 0.35,
+      "min_price_inr": 20.0,
+      "max_price_inr": 50000.0
+    },
+    "invalidation": {
+      "structure_lookback_bars": 10,
+      "atr_period": 14,
+      "atr_multiplier": 2.0
+    }
+  },
+  "risk": {
+    "max_planned_risk_per_trade_pct": 0.005,
+    "max_aggregate_open_risk_pct": 0.02,
+    "max_simultaneous_positions": 5,
+    "max_capital_allocation_per_trade_pct": 0.20,
+    "min_reward_to_risk_ratio": 2.0,
+    "no_averaging_down": true,
+    "default_trading_equity": 108699.95
+  },
+  "charges_and_taxes": {
+    "brokerage_pct": 0.0005,
+    "brokerage_flat_cap_inr": 20.0,
+    "stt_buy_pct": 0.001,
+    "stt_sell_pct": 0.001,
+    "exchange_turnover_pct": 0.0000297,
+    "sebi_turnover_pct": 0.000001,
+    "stamp_duty_buy_pct": 0.00015,
+    "dp_charges_sell_inr": 15.93,
+    "gst_rate_pct": 0.18,
+    "estimated_slippage_pct": 0.001
+  }
+}
+
