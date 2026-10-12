@@ -1,0 +1,1054 @@
+{
+  "source": "Official National Stock Exchange of India (NSE) MCP Node",
+  "endpoints": [
+    "https://mcp.nseindia.in/cmmkt/mcp",
+    "https://mcp.nseindia.in/bhavcopy/cm/mcp"
+  ],
+  "scrapedAt": "2026-11-12T20:18:01.151Z",
+  "crawlDurationMs": 5588,
+  "indices": [
+    {
+      "indexName": "NIFTY 50",
+      "last": 25299.35,
+      "previousClose": 25255.05,
+      "change": 44.3,
+      "percChange": 0.18,
+      "open": 25213.5,
+      "high": 25384.8,
+      "low": 25142.95,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY NEXT 50",
+      "last": 73481.25,
+      "previousClose": 73486.2,
+      "change": -4.95,
+      "percChange": -0.01,
+      "open": 73552.05,
+      "high": 73948.8,
+      "low": 73238.55,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY BANK",
+      "last": 61518.5,
+      "previousClose": 60792.4,
+      "change": 726.1,
+      "percChange": 1.19,
+      "open": 60801.85,
+      "high": 61545.85,
+      "low": 60723.1,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY FIN SERVICE",
+      "last": 28057.15,
+      "previousClose": 27663.4,
+      "change": 393.75,
+      "percChange": 1.42,
+      "open": 27675.7,
+      "high": 28059.95,
+      "low": 27637.1,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MID SELECT",
+      "last": 14322.75,
+      "previousClose": 14193.55,
+      "change": 129.2,
+      "percChange": 0.91,
+      "open": 14200.75,
+      "high": 14322.75,
+      "low": 14130.15,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY FPI 150",
+      "last": 1608.15,
+      "previousClose": 1605.25,
+      "change": 2.9,
+      "percChange": 0.18,
+      "open": 1603,
+      "high": 1613.35,
+      "low": 1597.6,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY 100",
+      "last": 26254.15,
+      "previousClose": 26216.8,
+      "change": 37.35,
+      "percChange": 0.14,
+      "open": 26185.7,
+      "high": 26356.2,
+      "low": 26111.25,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY 200",
+      "last": 14407.15,
+      "previousClose": 14367.3,
+      "change": 39.85,
+      "percChange": 0.28,
+      "open": 14356.95,
+      "high": 14456.75,
+      "low": 14314.85,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY 500",
+      "last": 23865.8,
+      "previousClose": 23779.3,
+      "change": 86.5,
+      "percChange": 0.36,
+      "open": 23775.6,
+      "high": 23940.8,
+      "low": 23712.6,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MIDCAP 50",
+      "last": 17884.95,
+      "previousClose": 17753.6,
+      "change": 131.35,
+      "percChange": 0.74,
+      "open": 17753.4,
+      "high": 17891.95,
+      "low": 17672.15,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MIDCAP 100",
+      "last": 62039,
+      "previousClose": 61519.1,
+      "change": 519.9,
+      "percChange": 0.85,
+      "open": 61595.9,
+      "high": 62197.8,
+      "low": 61379.45,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY SMLCAP 100",
+      "last": 19706.75,
+      "previousClose": 19489.35,
+      "change": 217.4,
+      "percChange": 1.12,
+      "open": 19563.75,
+      "high": 19787.25,
+      "low": 19526.9,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "INDIA VIX",
+      "last": 16.61,
+      "previousClose": 17.56,
+      "change": -0.95,
+      "percChange": -5.38,
+      "open": 17.56,
+      "high": 17.56,
+      "low": 15.25,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MIDCAP 150",
+      "last": 22760.75,
+      "previousClose": 22597.95,
+      "change": 162.8,
+      "percChange": 0.72,
+      "open": 22625.15,
+      "high": 22820.85,
+      "low": 22555.25,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY SMLCAP 50",
+      "last": 10023.1,
+      "previousClose": 9929.65,
+      "change": 93.45,
+      "percChange": 0.94,
+      "open": 9960.75,
+      "high": 10068.7,
+      "low": 9941.45,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY SMLCAP 250",
+      "last": 17994.5,
+      "previousClose": 17798.15,
+      "change": 196.35,
+      "percChange": 1.1,
+      "open": 17866.75,
+      "high": 18030.2,
+      "low": 17840.8,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MIDSML 400",
+      "last": 21032.4,
+      "previousClose": 20854.4,
+      "change": 178,
+      "percChange": 0.85,
+      "open": 20898.75,
+      "high": 21079.6,
+      "low": 20848.5,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY500 MULTICAP",
+      "last": 16788.95,
+      "previousClose": 16703.6,
+      "change": 85.35,
+      "percChange": 0.51,
+      "open": 16713.5,
+      "high": 16834.15,
+      "low": 16672.85,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY LARGEMID250",
+      "last": 16916.75,
+      "previousClose": 16845.75,
+      "change": 71,
+      "percChange": 0.42,
+      "open": 16845.2,
+      "high": 16964.8,
+      "low": 16796.15,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY TOTAL MKT",
+      "last": 13468.75,
+      "previousClose": 13416.75,
+      "change": 52,
+      "percChange": 0.39,
+      "open": 13416.75,
+      "high": 13509,
+      "low": 13382.15,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MICROCAP250",
+      "last": 25877.9,
+      "previousClose": 25632.45,
+      "change": 245.45,
+      "percChange": 0.96,
+      "open": 25728.15,
+      "high": 25913.85,
+      "low": 25696.55,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY500 LMS EQL",
+      "last": 18618.75,
+      "previousClose": 18500.25,
+      "change": 118.5,
+      "percChange": 0.64,
+      "open": 18522.8,
+      "high": 18662.55,
+      "low": 18480.05,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY SMALLCAP 500",
+      "last": 20561.15,
+      "previousClose": 20344.5,
+      "change": 216.65,
+      "percChange": 1.06,
+      "open": 20422.4,
+      "high": 20592.8,
+      "low": 20397.55,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MIDSMALL 50 50",
+      "last": 20537.05,
+      "previousClose": 20351.9,
+      "change": 185.15,
+      "percChange": 0.91,
+      "open": 20403.1,
+      "high": 20579.8,
+      "low": 20359.95,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY AUTO",
+      "last": 28231,
+      "previousClose": 28523.3,
+      "change": -292.3,
+      "percChange": -1.02,
+      "open": 28425.45,
+      "high": 28565.75,
+      "low": 28068.6,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY FINSRV25 50",
+      "last": 30099.55,
+      "previousClose": 29667.5,
+      "change": 432.05,
+      "percChange": 1.46,
+      "open": 29697.65,
+      "high": 30099.55,
+      "low": 29634.9,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY FMCG",
+      "last": 46838.5,
+      "previousClose": 47188.55,
+      "change": -350.05,
+      "percChange": -0.74,
+      "open": 47194.95,
+      "high": 47390.85,
+      "low": 46726.05,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY IT",
+      "last": 32163.55,
+      "previousClose": 32295.6,
+      "change": -132.05,
+      "percChange": -0.41,
+      "open": 32065.7,
+      "high": 32334.15,
+      "low": 31794.35,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MEDIA",
+      "last": 1761.25,
+      "previousClose": 1719,
+      "change": 42.25,
+      "percChange": 2.46,
+      "open": 1721.05,
+      "high": 1768.55,
+      "low": 1718.75,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY METAL",
+      "last": 12772.6,
+      "previousClose": 12786.15,
+      "change": -13.55,
+      "percChange": -0.11,
+      "open": 12797.25,
+      "high": 12892,
+      "low": 12753.1,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY PHARMA",
+      "last": 28675.75,
+      "previousClose": 28776.45,
+      "change": -100.7,
+      "percChange": -0.35,
+      "open": 28699.25,
+      "high": 28771.7,
+      "low": 28495.95,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY PSU BANK",
+      "last": 9305.95,
+      "previousClose": 9167.2,
+      "change": 138.75,
+      "percChange": 1.51,
+      "open": 9177.4,
+      "high": 9327.45,
+      "low": 9163.3,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY PVT BANK",
+      "last": 30206.05,
+      "previousClose": 29946.2,
+      "change": 259.85,
+      "percChange": 0.87,
+      "open": 29935.95,
+      "high": 30247.9,
+      "low": 29901.25,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY REALTY",
+      "last": 934.25,
+      "previousClose": 893.95,
+      "change": 40.3,
+      "percChange": 4.51,
+      "open": 891.8,
+      "high": 934.45,
+      "low": 890.8,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY HEALTHCARE",
+      "last": 17299.6,
+      "previousClose": 17355.35,
+      "change": -55.75,
+      "percChange": -0.32,
+      "open": 17297.55,
+      "high": 17340.1,
+      "low": 17196.6,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY CONSR DURBL",
+      "last": 38670.05,
+      "previousClose": 38536.4,
+      "change": 133.65,
+      "percChange": 0.35,
+      "open": 38634.85,
+      "high": 39231.7,
+      "low": 38494.45,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY OIL AND GAS",
+      "last": 11389.35,
+      "previousClose": 11451.05,
+      "change": -61.7,
+      "percChange": -0.54,
+      "open": 11459.35,
+      "high": 11463.15,
+      "low": 11339.2,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MIDSML HLTH",
+      "last": 54338.65,
+      "previousClose": 54480.4,
+      "change": -141.75,
+      "percChange": -0.26,
+      "open": 54439.6,
+      "high": 54605.7,
+      "low": 54153.25,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY FINSEREXBNK",
+      "last": 32629.45,
+      "previousClose": 31900.4,
+      "change": 729.05,
+      "percChange": 2.29,
+      "open": 31977.05,
+      "high": 32631.8,
+      "low": 31881.6,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MS FIN SERV",
+      "last": 22423,
+      "previousClose": 21884.5,
+      "change": 538.5,
+      "percChange": 2.46,
+      "open": 21931.75,
+      "high": 22423,
+      "low": 21857.7,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY MS IT TELCM",
+      "last": 10120.15,
+      "previousClose": 10122.25,
+      "change": -2.1,
+      "percChange": -0.02,
+      "open": 10125.55,
+      "high": 10175.3,
+      "low": 10054.15,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY CHEMICALS",
+      "last": 28677.45,
+      "previousClose": 28562.8,
+      "change": 114.65,
+      "percChange": 0.4,
+      "open": 28646.2,
+      "high": 28745.45,
+      "low": 28535,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY500 HEALTH",
+      "last": 22590.75,
+      "previousClose": 22614.15,
+      "change": -23.4,
+      "percChange": -0.1,
+      "open": 22562.65,
+      "high": 22636.8,
+      "low": 22476.1,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY REITS REALTY",
+      "last": 1927.45,
+      "previousClose": 1890.1,
+      "change": 37.35,
+      "percChange": 1.98,
+      "open": 1889.9,
+      "high": 1930.45,
+      "low": 1889,
+      "timeVal": "12-Nov-2026 15:40"
+    },
+    {
+      "indexName": "NIFTY CEMENT",
+      "last": 14532.95,
+      "previousClose": 14576.5,
+      "change": -43.55,
+      "percChange": -0.3,
+      "open": 14555.1,
+      "high": 14644.15,
+      "low": 14503.65,
+      "timeVal": "12-Nov-2026 15:40"
+    }
+  ],
+  "marketMovers": {
+    "segment": "NIFTY",
+    "gainersUpdatedAt": "2026-11-12T20:17:18.101650980Z",
+    "losersUpdatedAt": "2026-11-12T20:17:18.625125720Z",
+    "gainers": [
+      {
+        "symbol": "HDFCLIFE",
+        "series": "EQ",
+        "ltp": 597.8,
+        "prev_price": 573.55,
+        "net_price": 4.23,
+        "perChange": 4.23,
+        "trade_quantity": "65.94 L",
+        "turnover": "391.34 Cr"
+      },
+      {
+        "symbol": "SHRIRAMFIN",
+        "series": "EQ",
+        "ltp": 1003.8,
+        "prev_price": 969.15,
+        "net_price": 3.58,
+        "perChange": 3.58,
+        "trade_quantity": "60.11 L",
+        "turnover": "599.68 Cr"
+      },
+      {
+        "symbol": "BAJFINANCE",
+        "series": "EQ",
+        "ltp": 1115,
+        "prev_price": 1078.8,
+        "net_price": 3.36,
+        "perChange": 3.36,
+        "trade_quantity": "118.73 L",
+        "turnover": "1,315.18 Cr"
+      },
+      {
+        "symbol": "SBILIFE",
+        "series": "EQ",
+        "ltp": 1819.5,
+        "prev_price": 1767,
+        "net_price": 2.97,
+        "perChange": 2.97,
+        "trade_quantity": "17.45 L",
+        "turnover": "316.14 Cr"
+      },
+      {
+        "symbol": "SBIN",
+        "series": "EQ",
+        "ltp": 1086.5,
+        "prev_price": 1061.2,
+        "net_price": 2.38,
+        "perChange": 2.38,
+        "trade_quantity": "269.73 L",
+        "turnover": "2,912.29 Cr"
+      },
+      {
+        "symbol": "BAJAJFINSV",
+        "series": "EQ",
+        "ltp": 1887.1,
+        "prev_price": 1845,
+        "net_price": 2.28,
+        "perChange": 2.28,
+        "trade_quantity": "13.31 L",
+        "turnover": "251.60 Cr"
+      },
+      {
+        "symbol": "MAXHEALTH",
+        "series": "EQ",
+        "ltp": 946.3,
+        "prev_price": 928.3,
+        "net_price": 1.94,
+        "perChange": 1.94,
+        "trade_quantity": "28.31 L",
+        "turnover": "264.97 Cr"
+      },
+      {
+        "symbol": "BEL",
+        "series": "EQ",
+        "ltp": 404.8,
+        "prev_price": 399,
+        "net_price": 1.45,
+        "perChange": 1.45,
+        "trade_quantity": "114.08 L",
+        "turnover": "460.65 Cr"
+      },
+      {
+        "symbol": "ADANIPORTS",
+        "series": "EQ",
+        "ltp": 1930,
+        "prev_price": 1907,
+        "net_price": 1.21,
+        "perChange": 1.21,
+        "trade_quantity": "16.01 L",
+        "turnover": "308.54 Cr"
+      },
+      {
+        "symbol": "ICICIBANK",
+        "series": "EQ",
+        "ltp": 1590,
+        "prev_price": 1571.6,
+        "net_price": 1.17,
+        "perChange": 1.17,
+        "trade_quantity": "162.94 L",
+        "turnover": "2,582.83 Cr"
+      },
+      {
+        "symbol": "ADANIENT",
+        "series": "EQ",
+        "ltp": 2741.5,
+        "prev_price": 2714.5,
+        "net_price": 0.99,
+        "perChange": 0.99,
+        "trade_quantity": "10.04 L",
+        "turnover": "274.83 Cr"
+      },
+      {
+        "symbol": "ETERNAL",
+        "series": "EQ",
+        "ltp": 364.35,
+        "prev_price": 361.1,
+        "net_price": 0.9,
+        "perChange": 0.9,
+        "trade_quantity": "156.89 L",
+        "turnover": "572.32 Cr"
+      },
+      {
+        "symbol": "HDFCBANK",
+        "series": "EQ",
+        "ltp": 812.3,
+        "prev_price": 806.6,
+        "net_price": 0.71,
+        "perChange": 0.71,
+        "trade_quantity": "382.93 L",
+        "turnover": "3,102.92 Cr"
+      },
+      {
+        "symbol": "DRREDDY",
+        "series": "EQ",
+        "ltp": 1386.6,
+        "prev_price": 1377,
+        "net_price": 0.7,
+        "perChange": 0.7,
+        "trade_quantity": "12.23 L",
+        "turnover": "168.73 Cr"
+      },
+      {
+        "symbol": "KOTAKBANK",
+        "series": "EQ",
+        "ltp": 490.4,
+        "prev_price": 487.7,
+        "net_price": 0.55,
+        "perChange": 0.55,
+        "trade_quantity": "271.58 L",
+        "turnover": "1,329.73 Cr"
+      }
+    ],
+    "losers": [
+      {
+        "symbol": "ONGC",
+        "series": "EQ",
+        "ltp": 224.5,
+        "prev_price": 234.8,
+        "net_price": -1.01,
+        "perChange": -4.39,
+        "trade_quantity": "245.21 L",
+        "turnover": "553.65 Cr"
+      },
+      {
+        "symbol": "HINDUNILVR",
+        "series": "EQ",
+        "ltp": 1974,
+        "prev_price": 2022.4,
+        "net_price": -1.47,
+        "perChange": -2.39,
+        "trade_quantity": "18.04 L",
+        "turnover": "357.71 Cr"
+      },
+      {
+        "symbol": "NESTLEIND",
+        "series": "EQ",
+        "ltp": 1260.9,
+        "prev_price": 1288,
+        "net_price": -2.1,
+        "perChange": -2.1,
+        "trade_quantity": "12.20 L",
+        "turnover": "154.63 Cr"
+      },
+      {
+        "symbol": "M&M",
+        "series": "EQ",
+        "ltp": 3399,
+        "prev_price": 3465,
+        "net_price": -1.9,
+        "perChange": -1.9,
+        "trade_quantity": "26.24 L",
+        "turnover": "891.61 Cr"
+      },
+      {
+        "symbol": "POWERGRID",
+        "series": "EQ",
+        "ltp": 259.45,
+        "prev_price": 263.75,
+        "net_price": -1.63,
+        "perChange": -1.63,
+        "trade_quantity": "77.25 L",
+        "turnover": "201.28 Cr"
+      },
+      {
+        "symbol": "TRENT",
+        "series": "EQ",
+        "ltp": 3180,
+        "prev_price": 3222.7,
+        "net_price": -1.32,
+        "perChange": -1.32,
+        "trade_quantity": "6.11 L",
+        "turnover": "195.78 Cr"
+      },
+      {
+        "symbol": "GRASIM",
+        "series": "EQ",
+        "ltp": 3114.9,
+        "prev_price": 3156.7,
+        "net_price": -1.32,
+        "perChange": -1.32,
+        "trade_quantity": "9.73 L",
+        "turnover": "303.61 Cr"
+      },
+      {
+        "symbol": "LT",
+        "series": "EQ",
+        "ltp": 4159.2,
+        "prev_price": 4212,
+        "net_price": -1.25,
+        "perChange": -1.25,
+        "trade_quantity": "24.48 L",
+        "turnover": "1,022.72 Cr"
+      },
+      {
+        "symbol": "MARUTI",
+        "series": "EQ",
+        "ltp": 13024,
+        "prev_price": 13185,
+        "net_price": -1.22,
+        "perChange": -1.22,
+        "trade_quantity": "7.20 L",
+        "turnover": "941.03 Cr"
+      },
+      {
+        "symbol": "NTPC",
+        "series": "EQ",
+        "ltp": 323,
+        "prev_price": 327,
+        "net_price": -1.22,
+        "perChange": -1.22,
+        "trade_quantity": "52.00 L",
+        "turnover": "168.12 Cr"
+      },
+      {
+        "symbol": "TCS",
+        "series": "EQ",
+        "ltp": 2442.4,
+        "prev_price": 2472.1,
+        "net_price": -1.2,
+        "perChange": -1.2,
+        "trade_quantity": "21.39 L",
+        "turnover": "522.21 Cr"
+      },
+      {
+        "symbol": "APOLLOHOSP",
+        "series": "EQ",
+        "ltp": 8515,
+        "prev_price": 8604,
+        "net_price": -1.03,
+        "perChange": -1.03,
+        "trade_quantity": "3.48 L",
+        "turnover": "295.44 Cr"
+      },
+      {
+        "symbol": "HCLTECH",
+        "series": "EQ",
+        "ltp": 1380.8,
+        "prev_price": 1395,
+        "net_price": -1.02,
+        "perChange": -1.02,
+        "trade_quantity": "18.30 L",
+        "turnover": "252.81 Cr"
+      },
+      {
+        "symbol": "TITAN",
+        "series": "EQ",
+        "ltp": 4921.9,
+        "prev_price": 4970,
+        "net_price": -0.97,
+        "perChange": -0.97,
+        "trade_quantity": "7.33 L",
+        "turnover": "362.70 Cr"
+      },
+      {
+        "symbol": "SUNPHARMA",
+        "series": "EQ",
+        "ltp": 1885,
+        "prev_price": 1902.3,
+        "net_price": -0.91,
+        "perChange": -0.91,
+        "trade_quantity": "24.64 L",
+        "turnover": "464.58 Cr"
+      }
+    ]
+  },
+  "topValueStocks": [
+    {
+      "volume": 51316917,
+      "pct_change": 7.1,
+      "series": "EQ",
+      "close": 710.9,
+      "traded_value": 36095910676,
+      "symbol": "KALYANKJIL"
+    },
+    {
+      "volume": 38292509,
+      "pct_change": 0.71,
+      "series": "EQ",
+      "close": 812.3,
+      "traded_value": 31029532384.8,
+      "symbol": "HDFCBANK"
+    },
+    {
+      "volume": 26973410,
+      "pct_change": 2.38,
+      "series": "EQ",
+      "close": 1086.5,
+      "traded_value": 29122933805.3,
+      "symbol": "SBIN"
+    },
+    {
+      "volume": 16293900,
+      "pct_change": 1.17,
+      "series": "EQ",
+      "close": 1590,
+      "traded_value": 25828400613.2,
+      "symbol": "ICICIBANK"
+    },
+    {
+      "volume": 50614379,
+      "pct_change": 8.7,
+      "series": "EQ",
+      "close": 384.8,
+      "traded_value": 19274727311.15,
+      "symbol": "CUPID"
+    },
+    {
+      "volume": 13807921,
+      "pct_change": 0.32,
+      "series": "EQ",
+      "close": 1339.7,
+      "traded_value": 18451926046.3,
+      "symbol": "RELIANCE"
+    },
+    {
+      "volume": 8924897,
+      "pct_change": 7.31,
+      "series": "EQ",
+      "close": 1925,
+      "traded_value": 16721444824.6,
+      "symbol": "PAYTM"
+    },
+    {
+      "volume": 7646984,
+      "pct_change": -0.62,
+      "series": "EQ",
+      "close": 2096,
+      "traded_value": 15991507746.3,
+      "symbol": "BHARTIARTL"
+    },
+    {
+      "volume": 27158499,
+      "pct_change": 0.55,
+      "series": "EQ",
+      "close": 490.4,
+      "traded_value": 13297595789,
+      "symbol": "KOTAKBANK"
+    },
+    {
+      "volume": 11872744,
+      "pct_change": 3.36,
+      "series": "EQ",
+      "close": 1115,
+      "traded_value": 13151821258.05,
+      "symbol": "BAJFINANCE"
+    },
+    {
+      "volume": 8058518,
+      "pct_change": 16.53,
+      "series": "EQ",
+      "close": 1641.2,
+      "traded_value": 12897340846,
+      "symbol": "GABRIEL"
+    },
+    {
+      "volume": 2596682,
+      "pct_change": -2.13,
+      "series": "EQ",
+      "close": 4843.4,
+      "traded_value": 12665181539.7,
+      "symbol": "HAL"
+    },
+    {
+      "volume": 12785033,
+      "pct_change": 0.18,
+      "series": "EQ",
+      "close": 964,
+      "traded_value": 12329397108.1,
+      "symbol": "HINDALCO"
+    },
+    {
+      "volume": 15888085,
+      "pct_change": 8.35,
+      "series": "EQ",
+      "close": 762.9,
+      "traded_value": 12184640281.8,
+      "symbol": "AVANTIFEED"
+    },
+    {
+      "volume": 3064405,
+      "pct_change": 0.08,
+      "series": "EQ",
+      "close": 3909.1,
+      "traded_value": 11965211156.7,
+      "symbol": "BSE"
+    },
+    {
+      "volume": 7842954,
+      "pct_change": 0.49,
+      "series": "EQ",
+      "close": 1342.9,
+      "traded_value": 10538524887.5,
+      "symbol": "AXISBANK"
+    },
+    {
+      "volume": 22698941,
+      "pct_change": 2.25,
+      "series": "EQ",
+      "close": 446.15,
+      "traded_value": 10296450265,
+      "symbol": "HINDCOPPER"
+    },
+    {
+      "volume": 2448016,
+      "pct_change": -1.25,
+      "series": "EQ",
+      "close": 4159.2,
+      "traded_value": 10227244660.3,
+      "symbol": "LT"
+    },
+    {
+      "volume": 60006441,
+      "pct_change": 10.81,
+      "series": "EQ",
+      "close": 161.99,
+      "traded_value": 9722005047.28,
+      "symbol": "DCXINDIA"
+    },
+    {
+      "volume": 720496,
+      "pct_change": -1.22,
+      "series": "EQ",
+      "close": 13024,
+      "traded_value": 9410344593,
+      "symbol": "MARUTI"
+    }
+  ],
+  "breadth": {
+    "date": "2026-11-12",
+    "total_stocks": 3727,
+    "advances": 1989,
+    "declines": 1621,
+    "unchanged": 117,
+    "ad_ratio": 1.23,
+    "total_volume": 4976041975
+  },
+  "mood": {
+    "date": "2026-11-12",
+    "requested_date": "2026-11-13",
+    "benchmarks": {
+      "Nifty 50": {
+        "close": 25299.35,
+        "change_pct": 0.18
+      },
+      "Nifty Next 50": {
+        "close": 73481.25,
+        "change_pct": -0.01
+      },
+      "Nifty 500": {
+        "close": 23865.8,
+        "change_pct": 0.36
+      },
+      "NIFTY Midcap 100": {
+        "close": 62039,
+        "change_pct": 0.85
+      },
+      "NIFTY Smallcap 100": {
+        "close": 19706.75,
+        "change_pct": 1.12
+      }
+    },
+    "index_breadth": {
+      "up": 86,
+      "down": 58,
+      "unchanged": 0,
+      "up_pct": 59.7,
+      "reading": "mixed",
+      "equity_indices": 144
+    },
+    "stock_breadth": {
+      "up": 1660,
+      "down": 1265,
+      "unchanged": 57,
+      "up_pct": 55.7,
+      "reading": "mixed",
+      "stocks": 2982
+    },
+    "india_vix": {
+      "level": 16.62,
+      "change_1d_pct": -5.34,
+      "vs_1w_ago": {
+        "change_pct": 6.68,
+        "base_level": 15.58,
+        "base_date": "2026-11-05",
+        "direction": "rising"
+      },
+      "vs_1m_ago": {
+        "change_pct": 8.98,
+        "base_level": 15.25,
+        "base_date": "2026-10-12",
+        "direction": "rising"
+      },
+      "range": {
+        "min": 9.15,
+        "max": 27.89,
+        "mean": 14.42,
+        "percentile": 74.9,
+        "window_from": "2025-11-12",
+        "window_to": "2026-11-12",
+        "trading_days": 247
+      }
+    },
+    "method": "index_breadth counts NSE equity indices by sign of NSE's published daily change. stock_breadth counts mainboard stocks (series EQ, BE, BZ) by close vs previous close. breadth reading: 'broad advance' when 60% or more rose, 'broad decline' when 40% or fewer rose, otherwise 'mixed'. india_vix changes compare the closing level with the last trading day on or before 1 week / 1 month earlier; percentile is the share of days in the window shown on which VIX closed lower. These are descriptive statistics, not a forecast."
+  }
+}
