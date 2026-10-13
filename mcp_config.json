@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "fyers": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "mcp-remote@0.1.18",
+        "https://mcp.fyers.in/mcp",
+        "--header",
+        "Authorization: TOKEN"
+      ]
+    },
+    "nse-bhavcopy": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "mcp-remote",
+        "https://mcp.nseindia.in/bhavcopy/cm/mcp"
+      ]
+    },
+    "cm-market": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "mcp-remote",
+        "https://mcp.nseindia.in/cmmkt/mcp"
+      ]
+    }
+  }
+}
