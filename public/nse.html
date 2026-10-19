@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NSE India — National Stock Exchange Market Dashboard</title>
+<script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --nse-navy: #002B49;
+    --nse-dark-navy: #001A2C;
+    --nse-orange: #ED6C02;
+    --nse-accent: #005691;
+    --nse-yellow: #FFA000;
+    --nse-green: #00875A;
+    --nse-green-light: #E3FCEF;
+    --nse-red: #DE350B;
+    --nse-red-light: #FFEBE6;
+    --nse-gray-bg: #F4F6F9;
+    --nse-border: #D8E0E9;
+    --text-primary: #172B4D;
+    --text-muted: #5E6C84;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--nse-gray-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+  /* Custom scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #E9EEF4; }
+  ::-webkit-scrollbar-thumb { background: #A0B2C6; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #7188A3; }
+
+  /* NSE Header Nav */
+  .nse-top-strip {
+    background: #001A2C;
+    color: #97A0AF;
+    font-size: 11px;
+    padding: 4px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .nse-main-nav {
+    background: #002B49;
+    color: white;
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .nse-sub-nav {
+    background: white;
+    border-bottom: 2px solid var(--nse-orange);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+  }
+  .nse-tab-btn {
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    background: transparent;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .nse-tab-btn:hover {
+    color: var(--nse-navy);
+  }
+  .nse-tab-btn.active {
+    color: var(--nse-navy);
+    border-bottom-color: var(--nse-orange);
+    background: #F7FAFC;
+  }
+
+  /* Indices Ticker Strip */
+  .indices-strip {
+    background: #E8EEF5;
+    border-bottom: 1px solid var(--nse-border);
+    padding: 8px 24px;
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    align-items: center;
+  }
+  .index-card {
+    background: white;
+    border: 1px solid #C8D5E3;
+    border-radius: 6px;
+    padding: 8px 14px;
+    min-width: 175px;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .index-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+    border-color: var(--nse-accent);
+  }
+  .index-card.selected {
+    border: 2px solid var(--nse-navy);
+    background: #FAFCFE;
+  }
+
+  /* Tables */
+  .nse-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--nse-border);
+  }
+  .nse-table th {
+    background: #002B49;
+    color: white;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .nse-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #E6EDF4;
+    vertical-align: middle;
+  }
+  .nse-table tr:nth-child(even) td {
+    background-color: #FAFCFE;
+  }
+  .nse-table tr:hover td {
+    background-color: #EEF4FA;
+  }
+
+  /* Cards */
+  .nse-card {
+    background: white;
+    border: 1px solid var(--nse-border);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .nse-card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--nse-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #F8FAFC;
+    border-radius: 7px 7px 0 0;
+  }
+
+  /* Badges */
+  .badge-green {
+    background: var(--nse-green-light);
+    color: var(--nse-green);
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .badge-red {
+    background: var(--nse-red-light);
+    color: var(--nse-red);
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  /* Search bar */
+  .nse-search-input {
+    background: white;
+    border: 1px solid #B3C2D3;
+    color: var(--text-primary);
+    border-radius: 4px;
+    padding: 8px 14px 8px 34px;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .nse-search-input:focus {
+    border-color: var(--nse-orange);
+    box-shadow: 0 0 0 2px rgba(237, 108, 2, 0.2);
+  }
+
+  /* Suggest dropdown */
+  .suggest-box {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #B3C2D3;
+    border-radius: 4px;
+    margin-top: 2px;
+    max-height: 360px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    display: none;
+  }
+  .suggest-box.open { display: block; }
+  .suggest-row {
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #EDF2F7;
+  }
+  .suggest-row:hover {
+    background: #EBF4FC;
+  }
+
+  /* Heatmap Color Scale */
+  .hm-dark-green  { background-color: #14532d !important; color: #ffffff !important; }
+  .hm-mid-green   { background-color: #16a34a !important; color: #ffffff !important; }
+  .hm-light-green { background-color: #22c55e !important; color: #ffffff !important; }
+  .hm-pale-green  { background-color: #4ade80 !important; color: #064e3b !important; }
+  .hm-neutral     { background-color: #64748b !important; color: #ffffff !important; }
+  .hm-pale-red    { background-color: #f87171 !important; color: #ffffff !important; }
+  .hm-light-red   { background-color: #ef4444 !important; color: #ffffff !important; }
+  .hm-mid-red     { background-color: #dc2626 !important; color: #ffffff !important; }
+  .hm-dark-red    { background-color: #991b1b !important; color: #ffffff !important; }
+
+  .heatmap-cell {
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    padding: 6px 4px;
+    text-align: center;
+    user-select: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    min-height: 52px;
+  }
+  .heatmap-cell:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    z-index: 20;
+  }
+  .heatmap-cell .cell-symbol {
+    font-weight: 800;
+    font-size: 11px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .heatmap-cell .cell-chg {
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .heatmap-cell .cell-ltp {
+    font-size: 9px;
+    opacity: 0.88;
+    font-family: monospace;
+    margin-top: 1px;
+  }
+  .sector-group-card {
+    background: white;
+    border: 1px solid var(--nse-border);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .sector-group-card:hover {
+    border-color: #B3C2D3;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ======================== TOP STRIP ======================== -->
+<div class="nse-top-strip">
+  <div class="flex items-center gap-4">
+    <span><b>Market Status:</b> <span id="topMktStatus" class="text-white font-semibold">● Closed (Normal Trading)</span></span>
+    <span>|</span>
+    <span>Date: <span id="topMktDate" class="text-white">Thursday, 29 October 2026</span></span>
+  </div>
+  <div class="flex items-center gap-4">
+    <a href="/" class="text-orange-400 hover:underline font-semibold flex items-center gap-1">
+      <span>←</span> Back to Trading Terminal
+    </a>
+    <span>|</span>
+    <span>NSE MCP Services: <b>Live (mcp.nseindia.in)</b></span>
+  </div>
+</div>
+
+<!-- ======================== MAIN NAVIGATION ======================== -->
+<header class="nse-main-nav">
+  <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2">
+      <div class="w-10 h-10 rounded bg-white flex items-center justify-center font-black text-xl" style="color: #002B49; border: 2px solid #ED6C02;">
+        NSE
+      </div>
+      <div>
+        <div class="font-bold text-base tracking-tight leading-tight">NATIONAL STOCK EXCHANGE OF INDIA</div>
+        <div class="text-[10px] text-gray-300 tracking-wider">CAPITAL MARKET (CM) &amp; BHAVCOPY TERMINAL</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="relative w-96">
+    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    <input id="nseSearchInput" type="text" placeholder="Search Symbol, Company Name (e.g. RELIANCE, TCS)..." class="nse-search-input">
+    <div id="nseSuggestBox" class="suggest-box"></div>
+  </div>
+
+  <!-- MCP Server Status Pills -->
+  <div class="flex items-center gap-3">
+    <div class="text-right">
+      <div class="text-[10px] text-gray-300">MCP CONNECTIONS</div>
+      <div class="text-xs font-semibold text-emerald-400">nse-bhavcopy &bull; cm-market</div>
+    </div>
+    <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+  </div>
+</header>
+
+<!-- ======================== SUB NAV TABS ======================== -->
+<div class="nse-sub-nav">
+  <button class="nse-tab-btn active" data-tab="live-market" onclick="switchNseTab('live-market')">
+    📊 Live Market Snapshot
+  </button>
+  <button class="nse-tab-btn" data-tab="heatmaps" onclick="switchNseTab('heatmaps')">
+    🗺️ Sector &amp; Index Heatmaps
+  </button>
+  <button class="nse-tab-btn" data-tab="indices" onclick="switchNseTab('indices')">
+    📈 All Broad &amp; Sectoral Indices (43)
+  </button>
+  <button class="nse-tab-btn" data-tab="bhavcopy" onclick="switchNseTab('bhavcopy')">
+    📋 Official CM Bhavcopy (501 Equities)
+  </button>
+  <button class="nse-tab-btn" data-tab="gainers-losers" onclick="switchNseTab('gainers-losers')">
+    🔥 Top Gainers &amp; Losers
+  </button>
+  <button class="nse-tab-btn" data-tab="volume-gainers" onclick="switchNseTab('volume-gainers')">
+    ⚡ Most Active by Volume &amp; Value
+  </button>
+  <button class="nse-tab-btn" data-tab="mcp-inspector" onclick="switchNseTab('mcp-inspector')">
+    🛠️ NSE MCP Server Specs
+  </button>
+</div>
+
+<!-- ======================== INDICES STRIP ======================== -->
+<div class="indices-strip" id="indicesStrip">
+  <!-- Filled dynamically by JavaScript -->
+</div>
+
+<!-- ======================== MAIN CONTAINER ======================== -->
+<main class="p-6 space-y-6">
+
+  <!-- ============ TAB 1: LIVE MARKET SNAPSHOT ============ -->
+  <div id="tab-live-market" class="tab-content active space-y-6">
+    <!-- Market Highlights Grid -->
+    <div class="grid grid-cols-4 gap-4">
+      <div class="nse-card p-4">
+        <div class="text-xs text-gray-500 font-semibold mb-1 uppercase tracking-wide">NIFTY 50 Turnover</div>
+        <div class="text-2xl font-black text-slate-800" id="statTurnover">₹28,450.0 Cr</div>
+        <div class="text-xs text-gray-500 mt-1">Shares: <b class="text-gray-700">34.85 Cr</b></div>
+      </div>
+      <div class="nse-card p-4">
+        <div class="text-xs text-gray-500 font-semibold mb-1 uppercase tracking-wide">Advances / Declines</div>
+        <div class="flex items-center gap-3 mt-1">
+          <div class="text-lg font-bold text-emerald-700 flex items-center gap-1">
+            <span>▲</span> <span id="statAdvances">238</span>
+          </div>
+          <span class="text-gray-300">|</span>
+          <div class="text-lg font-bold text-red-700 flex items-center gap-1">
+            <span>▼</span> <span id="statDeclines">256</span>
+          </div>
+          <span class="text-gray-300">|</span>
+          <div class="text-sm font-semibold text-gray-500">Unch: 7</div>
+        </div>
+        <div class="w-full bg-gray-200 h-1.5 rounded-full mt-2 overflow-hidden flex">
+          <div class="bg-emerald-600 h-full" style="width: 48%;"></div>
+          <div class="bg-red-600 h-full" style="width: 52%;"></div>
+        </div>
+      </div>
+      <div class="nse-card p-4">
+        <div class="text-xs text-gray-500 font-semibold mb-1 uppercase tracking-wide">NIFTY 500 Broad Cap</div>
+        <div class="text-2xl font-black text-slate-800" id="statNifty500">21,727.45</div>
+        <div class="text-xs text-red-600 mt-1 font-semibold">▼ -0.03% (-7.45 pts)</div>
+      </div>
+      <div class="nse-card p-4">
+        <div class="text-xs text-gray-500 font-semibold mb-1 uppercase tracking-wide">CM Segment Securities</div>
+        <div class="text-2xl font-black text-slate-800">501 Stocks</div>
+        <div class="text-xs text-emerald-600 mt-1 font-semibold">✓ 100% Free-Float Audited</div>
+      </div>
+    </div>
+
+    <!-- Dual Column: Top Gainers & Losers -->
+    <div class="grid grid-cols-2 gap-6">
+      <!-- Top Gainers Card -->
+      <div class="nse-card">
+        <div class="nse-card-header">
+          <h3 class="font-bold text-slate-800 flex items-center gap-2">
+            <span class="text-emerald-600 font-black">▲</span> Top Gainers (Capital Market)
+          </h3>
+          <span class="text-xs text-gray-500 font-semibold">NSE Bhavcopy Feed</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="nse-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Series</th>
+                <th class="text-right">LTP (₹)</th>
+                <th class="text-right">% Chg</th>
+                <th class="text-right">Volume</th>
+                <th class="text-right">High (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="topGainersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Losers Card -->
+      <div class="nse-card">
+        <div class="nse-card-header">
+          <h3 class="font-bold text-slate-800 flex items-center gap-2">
+            <span class="text-red-600 font-black">▼</span> Top Losers (Capital Market)
+          </h3>
+          <span class="text-xs text-gray-500 font-semibold">NSE Bhavcopy Feed</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="nse-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Series</th>
+                <th class="text-right">LTP (₹)</th>
+                <th class="text-right">% Chg</th>
+                <th class="text-right">Volume</th>
+                <th class="text-right">Low (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="topLosersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: SECTOR & INDEX HEATMAPS ============ -->
+  <div id="tab-heatmaps" class="tab-content space-y-6">
+    <!-- Header Controls & View Selector -->
+    <div class="nse-card p-5">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🗺️</span>
+            <h2 class="font-black text-xl text-slate-800 tracking-tight">NSE Sector &amp; Index Heatmaps</h2>
+            <span class="text-xs bg-orange-100 text-[#ED6C02] font-bold px-2.5 py-0.5 rounded border border-orange-200">18 Sectors &bull; 43 Indices &bull; 501 Stocks</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">Live market visualization of all 501 Capital Market constituents grouped by sector and weighted by traded volume.</p>
+        </div>
+
+        <!-- Heatmap Sub-view Toggle Buttons -->
+        <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <button id="hmViewBtnSectors" class="px-3 py-1.5 text-xs font-bold rounded shadow-sm bg-white text-[#002B49]" onclick="setHeatmapSubView('sectors')">
+            🏢 All 18 Sectors
+          </button>
+          <button id="hmViewBtnTreemap" class="px-3 py-1.5 text-xs font-semibold rounded text-gray-600 hover:text-slate-900" onclick="setHeatmapSubView('treemap')">
+            📊 Market Treemap (501)
+          </button>
+          <button id="hmViewBtnIndices" class="px-3 py-1.5 text-xs font-semibold rounded text-gray-600 hover:text-slate-900" onclick="setHeatmapSubView('indices')">
+            📈 Indices Matrix (43)
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters & Legend Toolbar -->
+      <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Sector Selector Dropdown -->
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-bold text-gray-600">Sector:</label>
+            <select id="heatmapSectorFilter" class="nse-search-input text-xs py-1.5 px-3" style="width: 190px;" onchange="onHeatmapFilterChange()">
+              <option value="ALL">All 18 Sectors</option>
+            </select>
+          </div>
+
+          <!-- Sort Selector -->
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-bold text-gray-600">Sort By:</label>
+            <select id="heatmapSortFilter" class="nse-search-input text-xs py-1.5 px-3" style="width: 170px;" onchange="onHeatmapFilterChange()">
+              <option value="change_desc">% Change (High → Low)</option>
+              <option value="change_asc">% Change (Low → High)</option>
+              <option value="volume_desc">Traded Volume</option>
+              <option value="symbol_asc">Symbol Name (A → Z)</option>
+            </select>
+          </div>
+
+          <!-- Search input -->
+          <div class="relative">
+            <input id="heatmapSymbolSearch" type="text" placeholder="Filter symbol (e.g. INFY)..." class="nse-search-input text-xs py-1.5 pl-7 pr-3" style="width: 180px;" oninput="onHeatmapFilterChange()">
+            <span class="absolute left-2.5 top-1.5 text-gray-400 text-xs">🔍</span>
+          </div>
+        </div>
+
+        <!-- Color Scale Legend -->
+        <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-600">
+          <span class="mr-1">Scale:</span>
+          <span class="px-1.5 py-0.5 rounded hm-dark-red">&lt; -3%</span>
+          <span class="px-1.5 py-0.5 rounded hm-mid-red">-1.5% to -3%</span>
+          <span class="px-1.5 py-0.5 rounded hm-pale-red">0 to -1.5%</span>
+          <span class="px-1.5 py-0.5 rounded hm-pale-green">0 to +1.5%</span>
+          <span class="px-1.5 py-0.5 rounded hm-mid-green">+1.5% to +3%</span>
+          <span class="px-1.5 py-0.5 rounded hm-dark-green">&gt; +3%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-VIEW 1: All 18 Sectors (Group Cards) -->
+    <div id="hmSubViewSectors" class="space-y-6">
+      <div id="sectorHeatmapsGrid" class="space-y-6">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- SUB-VIEW 2: Market Treemap (All 501 Constituents Grid) -->
+    <div id="hmSubViewTreemap" class="nse-card p-5 hidden">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">Full NIFTY 500 Market Treemap</h3>
+          <p class="text-xs text-gray-500">All 501 constituents in one continuous high-density heatmap. Click any tile to open in Trading Terminal.</p>
+        </div>
+        <div id="treemapStockCount" class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded">501 Stocks</div>
+      </div>
+      <div id="treemapGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- SUB-VIEW 3: Indices Matrix (43 Indices) -->
+    <div id="hmSubViewIndices" class="space-y-6 hidden">
+      <!-- Broad Market Indices -->
+      <div class="nse-card p-5">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-2">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Broad Market Benchmark Indices
+            </h3>
+            <p class="text-xs text-gray-500">NIFTY 50, NIFTY NEXT 50, MIDCAP, SMALLCAP, and BROAD benchmarks.</p>
+          </div>
+          <span class="text-xs font-semibold text-gray-500 bg-slate-100 px-2 py-0.5 rounded" id="indicesBroadCount"></span>
+        </div>
+        <div id="indicesGridBroad" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"></div>
+      </div>
+
+      <!-- Sectoral Indices -->
+      <div class="nse-card p-5">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-2">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Sectoral Indices
+            </h3>
+            <p class="text-xs text-gray-500">Official sector benchmarks covering Banking, IT, Auto, Pharma, FMCG, Metal, and Energy.</p>
+          </div>
+          <span class="text-xs font-semibold text-gray-500 bg-slate-100 px-2 py-0.5 rounded" id="indicesSectoralCount"></span>
+        </div>
+        <div id="indicesGridSectoral" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"></div>
+      </div>
+
+      <!-- Thematic & Strategy Indices -->
+      <div class="nse-card p-5">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-2">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span> Thematic &amp; Strategy Indices
+            </h3>
+            <p class="text-xs text-gray-500">Commodities, PSE, CPSE, MNC, Alpha, Low Volatility, Quality, and ESG strategies.</p>
+          </div>
+          <span class="text-xs font-semibold text-gray-500 bg-slate-100 px-2 py-0.5 rounded" id="indicesThematicCount"></span>
+        </div>
+        <div id="indicesGridThematic" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 2: ALL INDICES ============ -->
+  <div id="tab-indices" class="tab-content space-y-4">
+    <div class="nse-card p-4 flex items-center justify-between">
+      <div>
+        <h2 class="font-bold text-lg text-slate-800">All 43 NSE Broad Market &amp; Sectoral Indices</h2>
+        <p class="text-xs text-gray-500">Real-time benchmark index levels, daily range, and market turnover.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <input id="indicesFilter" type="text" placeholder="Filter index (e.g. BANK, IT, AUTO)..." class="nse-search-input text-xs" style="width: 250px;" oninput="renderIndicesTable()">
+      </div>
+    </div>
+
+    <div class="nse-card overflow-hidden">
+      <div class="overflow-x-auto" style="max-height: 600px;">
+        <table class="nse-table">
+          <thead>
+            <tr>
+              <th>Index Name</th>
+              <th>Category</th>
+              <th class="text-right">Current LTP (₹)</th>
+              <th class="text-right">% Change</th>
+              <th class="text-right">Open</th>
+              <th class="text-right">High</th>
+              <th class="text-right">Low</th>
+              <th class="text-right">Turnover</th>
+            </tr>
+          </thead>
+          <tbody id="allIndicesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 3: BHAVCOPY ============ -->
+  <div id="tab-bhavcopy" class="tab-content space-y-4">
+    <div class="nse-card p-4 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h2 class="font-bold text-lg text-slate-800">NSE Official Capital Market Bhavcopy (501 Constituents)</h2>
+        <p class="text-xs text-gray-500">Direct replica of daily Bhavcopy dataset with full Open-High-Low-Close, Volume, and ISIN metadata.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <input id="bhavcopyFilter" type="text" placeholder="Search Symbol, Sector, ISIN..." class="nse-search-input text-xs" style="width: 260px;" oninput="filterBhavcopyTable()">
+        <button class="px-3 py-1.5 bg-[#002B49] text-white rounded text-xs font-semibold hover:bg-[#001A2C]" onclick="downloadBhavcopyCSV()">
+          📥 Export CSV
+        </button>
+      </div>
+    </div>
+
+    <div class="nse-card overflow-hidden">
+      <div class="overflow-x-auto" style="max-height: 650px;">
+        <table class="nse-table">
+          <thead>
+            <tr>
+              <th class="cursor-pointer" onclick="sortBhavcopy('symbol')">Symbol ↕</th>
+              <th>Security Name</th>
+              <th>Sector / Series</th>
+              <th class="text-right cursor-pointer" onclick="sortBhavcopy('open')">Open ↕</th>
+              <th class="text-right cursor-pointer" onclick="sortBhavcopy('high')">High ↕</th>
+              <th class="text-right cursor-pointer" onclick="sortBhavcopy('low')">Low ↕</th>
+              <th class="text-right cursor-pointer" onclick="sortBhavcopy('ltp')">Close / LTP ↕</th>
+              <th class="text-right cursor-pointer" onclick="sortBhavcopy('change_perc')">% Chg ↕</th>
+              <th class="text-right cursor-pointer" onclick="sortBhavcopy('volume')">Traded Volume ↕</th>
+              <th>ISIN Code</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="bhavcopyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 4: GAINERS & LOSERS FULL ============ -->
+  <div id="tab-gainers-losers" class="tab-content space-y-6">
+    <div class="grid grid-cols-2 gap-6">
+      <div class="nse-card">
+        <div class="nse-card-header">
+          <h3 class="font-bold text-slate-800">Full Ranking: Top 25 Gainers</h3>
+          <span class="badge-green">Advancing</span>
+        </div>
+        <div class="overflow-x-auto" style="max-height: 600px;">
+          <table class="nse-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Symbol</th>
+                <th class="text-right">LTP (₹)</th>
+                <th class="text-right">% Gain</th>
+                <th class="text-right">Volume</th>
+              </tr>
+            </thead>
+            <tbody id="fullGainersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="nse-card">
+        <div class="nse-card-header">
+          <h3 class="font-bold text-slate-800">Full Ranking: Top 25 Losers</h3>
+          <span class="badge-red">Declining</span>
+        </div>
+        <div class="overflow-x-auto" style="max-height: 600px;">
+          <table class="nse-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Symbol</th>
+                <th class="text-right">LTP (₹)</th>
+                <th class="text-right">% Drop</th>
+                <th class="text-right">Volume</th>
+              </tr>
+            </thead>
+            <tbody id="fullLosersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 5: VOLUME GAINERS ============ -->
+  <div id="tab-volume-gainers" class="tab-content space-y-6">
+    <div class="grid grid-cols-2 gap-6">
+      <div class="nse-card">
+        <div class="nse-card-header">
+          <h3 class="font-bold text-slate-800">Most Active Equities by Volume (Shares)</h3>
+          <span class="text-xs font-semibold text-gray-500">High Participation</span>
+        </div>
+        <div class="overflow-x-auto" style="max-height: 600px;">
+          <table class="nse-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Security Name</th>
+                <th class="text-right">LTP (₹)</th>
+                <th class="text-right">% Chg</th>
+                <th class="text-right">Traded Shares</th>
+              </tr>
+            </thead>
+            <tbody id="mostActiveVolumeBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="nse-card">
+        <div class="nse-card-header">
+          <h3 class="font-bold text-slate-800">Most Active Equities by Value (Turnover)</h3>
+          <span class="text-xs font-semibold text-gray-500">Capital Flow</span>
+        </div>
+        <div class="overflow-x-auto" style="max-height: 600px;">
+          <table class="nse-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Security Name</th>
+                <th class="text-right">LTP (₹)</th>
+                <th class="text-right">% Chg</th>
+                <th class="text-right">Est. Turnover</th>
+              </tr>
+            </thead>
+            <tbody id="mostActiveValueBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 6: MCP SERVER INSPECTOR ============ -->
+  <div id="tab-mcp-inspector" class="tab-content space-y-6">
+    <div class="nse-card p-6 space-y-4">
+      <div class="flex items-center justify-between border-b pb-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">National Stock Exchange (NSE) Model Context Protocol Servers</h2>
+          <p class="text-xs text-gray-500 mt-1">Configured and registered in <code class="bg-gray-100 px-1 py-0.5 rounded text-slate-700">mcp_config.json</code> and ready for agentic execution.</p>
+        </div>
+        <span class="px-3 py-1 rounded bg-emerald-100 text-emerald-800 font-bold text-xs">2 ACTIVE MCP SERVERS</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <!-- Server 1 -->
+        <div class="border rounded-lg p-5 bg-slate-50 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-base text-[#002B49]">1. nse-bhavcopy</span>
+            <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[11px] font-semibold">CM Bhavcopy Feed</span>
+          </div>
+          <div class="text-xs text-gray-600 font-mono space-y-1 bg-white p-3 rounded border">
+            <div><b>Endpoint:</b> https://mcp.nseindia.in/bhavcopy/cm/mcp</div>
+            <div><b>Transport:</b> SSE via mcp-remote bridge</div>
+            <div><b>Protocol:</b> MCP 2024-11-05 Streamable Bridge</div>
+            <div><b>Capability:</b> EOD Bhavcopy, Settlement OHLCV, ISIN registry</div>
+          </div>
+          <p class="text-xs text-gray-500">Provides institutional daily end-of-day equity prices, delivery quantities, and official NSE corporate identifiers.</p>
+        </div>
+
+        <!-- Server 2 -->
+        <div class="border rounded-lg p-5 bg-slate-50 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-base text-[#002B49]">2. cm-market</span>
+            <span class="px-2 py-0.5 rounded bg-orange-100 text-orange-800 text-[11px] font-semibold">Capital Market Live</span>
+          </div>
+          <div class="text-xs text-gray-600 font-mono space-y-1 bg-white p-3 rounded border">
+            <div><b>Endpoint:</b> https://mcp.nseindia.in/cmmkt/mcp</div>
+            <div><b>Transport:</b> SSE via mcp-remote bridge</div>
+            <div><b>Protocol:</b> MCP 2024-11-05 Streamable Bridge</div>
+            <div><b>Capability:</b> Intraday quotes, Advances/Declines, Market Turnover</div>
+          </div>
+          <p class="text-xs text-gray-500">Provides live Capital Market tick snapshots, real-time index calculations, and 52-week high/low breadth data.</p>
+        </div>
+      </div>
+
+      <!-- JSON Preview -->
+      <div class="mt-4">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Registered mcp_config.json Architecture</h3>
+        <pre class="bg-slate-900 text-emerald-400 p-4 rounded-lg text-xs font-mono overflow-x-auto">{
+  "mcpServers": {
+    "nse-bhavcopy": {
+      "command": "cmd.exe",
+      "args": ["/c", "npx", "-y", "mcp-remote", "https://mcp.nseindia.in/bhavcopy/cm/mcp"]
+    },
+    "cm-market": {
+      "command": "cmd.exe",
+      "args": ["/c", "npx", "-y", "mcp-remote", "https://mcp.nseindia.in/cmmkt/mcp"]
+    }
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ======================== FOOTER ======================== -->
+<footer class="mt-12 bg-[#001A2C] text-gray-400 text-xs py-8 px-6 border-t border-slate-700">
+  <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded bg-white text-[#002B49] font-black flex items-center justify-center">NSE</div>
+      <div>
+        <div class="text-white font-semibold">National Stock Exchange of India Ltd.</div>
+        <div>Exchange Plaza, C-1, Block G, Bandra Kurla Complex, Bandra (E), Mumbai - 400 051</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-6 text-gray-300">
+      <a href="/" class="hover:text-orange-400">Trading Terminal</a>
+      <a href="/nse" class="hover:text-orange-400 font-bold text-orange-400">NSE Dashboard</a>
+      <span>CM Segment Data</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ======================== JAVASCRIPT ======================== -->
+<script>
+let catalogData = { indices: [], constituents: [] };
+let bhavcopySortKey = 'volume';
+let bhavcopySortAsc = false;
+let heatmapSubView = 'sectors';
+let sectorsPopulated = false;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadNseData();
+  setupSearch();
+});
+
+async function loadNseData() {
+  try {
+    const res = await fetch('/api/heatmaps');
+    const data = await res.json();
+    catalogData = {
+      indices: data.indices || [],
+      constituents: data.constituents || []
+    };
+    renderIndicesStrip();
+    renderMarketHighlights();
+    renderGainersAndLosers();
+    renderIndicesTable();
+    renderBhavcopyTable();
+    renderVolumeGainers();
+    renderHeatmapsTab();
+  } catch (err) {
+    console.error('Failed to load NSE catalog:', err);
+  }
+}
+
+function switchNseTab(tabId) {
+  document.querySelectorAll('.nse-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabId));
+  if (tabId === 'heatmaps') {
+    renderHeatmapsTab();
+  }
+}
+
+/* ==============================================================
+   HEATMAPS IMPLEMENTATION (18 SECTORS & 43 INDICES)
+   ============================================================== */
+
+function getHeatmapColorClass(change) {
+  const c = Number(change) || 0;
+  if (c >= 3.0) return 'hm-dark-green';
+  if (c >= 1.5) return 'hm-mid-green';
+  if (c >= 0.5) return 'hm-light-green';
+  if (c > 0.0) return 'hm-pale-green';
+  if (c === 0.0) return 'hm-neutral';
+  if (c > -0.5) return 'hm-pale-red';
+  if (c > -1.5) return 'hm-light-red';
+  if (c > -3.0) return 'hm-mid-red';
+  return 'hm-dark-red';
+}
+
+function setHeatmapSubView(view) {
+  heatmapSubView = view;
+  const btnSectors = document.getElementById('hmViewBtnSectors');
+  const btnTreemap = document.getElementById('hmViewBtnTreemap');
+  const btnIndices = document.getElementById('hmViewBtnIndices');
+
+  const viewSectors = document.getElementById('hmSubViewSectors');
+  const viewTreemap = document.getElementById('hmSubViewTreemap');
+  const viewIndices = document.getElementById('hmSubViewIndices');
+
+  // Reset button styles
+  [btnSectors, btnTreemap, btnIndices].forEach(btn => {
+    btn.className = 'px-3 py-1.5 text-xs font-semibold rounded text-gray-600 hover:text-slate-900';
+  });
+
+  if (view === 'sectors') {
+    btnSectors.className = 'px-3 py-1.5 text-xs font-bold rounded shadow-sm bg-white text-[#002B49]';
+    viewSectors.classList.remove('hidden');
+    viewTreemap.classList.add('hidden');
+    viewIndices.classList.add('hidden');
+  } else if (view === 'treemap') {
+    btnTreemap.className = 'px-3 py-1.5 text-xs font-bold rounded shadow-sm bg-white text-[#002B49]';
+    viewSectors.classList.add('hidden');
+    viewTreemap.classList.remove('hidden');
+    viewIndices.classList.add('hidden');
+  } else if (view === 'indices') {
+    btnIndices.className = 'px-3 py-1.5 text-xs font-bold rounded shadow-sm bg-white text-[#002B49]';
+    viewSectors.classList.add('hidden');
+    viewTreemap.classList.add('hidden');
+    viewIndices.classList.remove('hidden');
+  }
+
+  renderHeatmapsTab();
+}
+
+function populateHeatmapSectorOptions() {
+  if (sectorsPopulated) return;
+  const select = document.getElementById('heatmapSectorFilter');
+  if (!select) return;
+
+  const sectors = [...new Set(catalogData.constituents.map(c => c.sector).filter(Boolean))].sort();
+  sectors.forEach(s => {
+    const count = catalogData.constituents.filter(c => c.sector === s).length;
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = `${s} (${count})`;
+    select.appendChild(opt);
+  });
+  sectorsPopulated = true;
+}
+
+function onHeatmapFilterChange() {
+  renderHeatmapsTab();
+}
+
+function renderHeatmapsTab() {
+  populateHeatmapSectorOptions();
+  if (heatmapSubView === 'sectors') {
+    renderSectorHeatmaps();
+  } else if (heatmapSubView === 'treemap') {
+    renderTreemap();
+  } else if (heatmapSubView === 'indices') {
+    renderIndicesMatrix();
+  }
+}
+
+function sortConstituents(list, sortMode) {
+  const arr = [...list];
+  if (sortMode === 'change_desc') {
+    arr.sort((a,b) => (b.change_perc || 0) - (a.change_perc || 0));
+  } else if (sortMode === 'change_asc') {
+    arr.sort((a,b) => (a.change_perc || 0) - (b.change_perc || 0));
+  } else if (sortMode === 'volume_desc') {
+    arr.sort((a,b) => (b.volume || 0) - (a.volume || 0));
+  } else if (sortMode === 'symbol_asc') {
+    arr.sort((a,b) => a.symbol.localeCompare(b.symbol));
+  }
+  return arr;
+}
+
+function renderSectorHeatmaps() {
+  const container = document.getElementById('sectorHeatmapsGrid');
+  if (!container) return;
+
+  const selectedSector = document.getElementById('heatmapSectorFilter')?.value || 'ALL';
+  const sortMode = document.getElementById('heatmapSortFilter')?.value || 'change_desc';
+  const searchQ = (document.getElementById('heatmapSymbolSearch')?.value || '').trim().toLowerCase();
+
+  // All unique sectors
+  let sectors = [...new Set(catalogData.constituents.map(c => c.sector).filter(Boolean))].sort();
+  if (selectedSector !== 'ALL') {
+    sectors = sectors.filter(s => s === selectedSector);
+  }
+
+  if (sectors.length === 0) {
+    container.innerHTML = `<div class="p-8 text-center text-gray-500">No sectors match your selection.</div>`;
+    return;
+  }
+
+  container.innerHTML = sectors.map(sector => {
+    let stocks = catalogData.constituents.filter(c => c.sector === sector);
+    if (searchQ) {
+      stocks = stocks.filter(c => c.symbol.toLowerCase().includes(searchQ) || c.name.toLowerCase().includes(searchQ));
+    }
+    if (stocks.length === 0) return '';
+
+    stocks = sortConstituents(stocks, sortMode);
+
+    // Compute Sector stats
+    const total = stocks.length;
+    const avgChange = stocks.reduce((acc, c) => acc + (c.change_perc || 0), 0) / (total || 1);
+    const advances = stocks.filter(c => (c.change_perc || 0) > 0).length;
+    const declines = stocks.filter(c => (c.change_perc || 0) < 0).length;
+    const unchanged = total - advances - declines;
+    const advPercent = total > 0 ? (advances / total) * 100 : 0;
+    const isUp = avgChange >= 0;
+
+    return `
+      <div class="sector-group-card">
+        <!-- Sector Header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <h3 class="font-extrabold text-slate-800 text-base tracking-tight">${sector.toUpperCase()}</h3>
+            <span class="text-xs bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded">${total} stocks</span>
+            <span class="text-xs font-extrabold px-2.5 py-0.5 rounded ${isUp ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-red-100 text-red-800 border border-red-300'}">
+              Avg ${isUp ? '▲ +' : '▼ '}${avgChange.toFixed(2)}%
+            </span>
+          </div>
+
+          <!-- Mini Breadth Bar -->
+          <div class="flex items-center gap-3 text-xs">
+            <span class="font-bold text-emerald-700">▲ ${advances}</span>
+            <span class="text-slate-300">|</span>
+            <span class="font-bold text-red-700">▼ ${declines}</span>
+            ${unchanged > 0 ? `<span class="text-slate-300">|</span><span class="text-slate-500 font-medium">Unch: ${unchanged}</span>` : ''}
+            <div class="w-24 bg-gray-200 h-2 rounded-full overflow-hidden flex ml-1">
+              <div class="bg-emerald-600 h-full" style="width: ${advPercent}%;"></div>
+              <div class="bg-red-600 h-full" style="width: ${100 - advPercent}%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Constituent Cells Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2.5">
+          ${stocks.map(s => {
+            const chg = s.change_perc || 0;
+            const colorCls = getHeatmapColorClass(chg);
+            const tooltip = `${s.symbol} - ${s.name}\nLTP: ₹${s.ltp.toLocaleString('en-IN')}\nChange: ${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%\nTraded Volume: ${formatVol(s.volume)}\nSector: ${s.sector}\n\nClick to analyze in Trading Terminal`;
+            return `
+              <div class="heatmap-cell ${colorCls}" 
+                   title="${tooltip.replace(/"/g, '&quot;')}"
+                   onclick="window.location.href='/?symbol=${s.symbol}'">
+                <div class="cell-symbol">${s.symbol}</div>
+                <div class="cell-chg">${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%</div>
+                <div class="cell-ltp">₹${s.ltp.toLocaleString('en-IN')}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTreemap() {
+  const grid = document.getElementById('treemapGrid');
+  const countEl = document.getElementById('treemapStockCount');
+  if (!grid) return;
+
+  const selectedSector = document.getElementById('heatmapSectorFilter')?.value || 'ALL';
+  const sortMode = document.getElementById('heatmapSortFilter')?.value || 'change_desc';
+  const searchQ = (document.getElementById('heatmapSymbolSearch')?.value || '').trim().toLowerCase();
+
+  let list = [...catalogData.constituents];
+  if (selectedSector !== 'ALL') {
+    list = list.filter(c => c.sector === selectedSector);
+  }
+  if (searchQ) {
+    list = list.filter(c => c.symbol.toLowerCase().includes(searchQ) || c.name.toLowerCase().includes(searchQ));
+  }
+
+  list = sortConstituents(list, sortMode);
+  if (countEl) countEl.textContent = `${list.length} Stocks`;
+
+  if (list.length === 0) {
+    grid.innerHTML = `<div class="col-span-full p-8 text-center text-gray-500">No stocks found matching criteria.</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(s => {
+    const chg = s.change_perc || 0;
+    const colorCls = getHeatmapColorClass(chg);
+    const tooltip = `${s.symbol} - ${s.name}\nLTP: ₹${s.ltp.toLocaleString('en-IN')}\nChange: ${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%\nTraded Volume: ${formatVol(s.volume)}\nSector: ${s.sector}\n\nClick to analyze in Trading Terminal`;
+    return `
+      <div class="heatmap-cell ${colorCls}" 
+           title="${tooltip.replace(/"/g, '&quot;')}"
+           onclick="window.location.href='/?symbol=${s.symbol}'">
+        <div class="cell-symbol">${s.symbol}</div>
+        <div class="cell-chg">${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%</div>
+        <div class="cell-ltp">₹${s.ltp.toLocaleString('en-IN')}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderIndicesMatrix() {
+  const broadGrid = document.getElementById('indicesGridBroad');
+  const sectoralGrid = document.getElementById('indicesGridSectoral');
+  const thematicGrid = document.getElementById('indicesGridThematic');
+  if (!broadGrid || !sectoralGrid || !thematicGrid) return;
+
+  const searchQ = (document.getElementById('heatmapSymbolSearch')?.value || '').trim().toLowerCase();
+
+  let list = catalogData.indices;
+  if (searchQ) {
+    list = list.filter(idx => idx.name.toLowerCase().includes(searchQ) || (idx.category && idx.category.toLowerCase().includes(searchQ)));
+  }
+
+  const broad = list.filter(idx => !idx.category || idx.category === 'BROAD');
+  const sectoral = list.filter(idx => idx.category === 'SECTORAL');
+  const thematic = list.filter(idx => idx.category === 'THEMATIC' || idx.category === 'STRATEGY');
+
+  document.getElementById('indicesBroadCount').textContent = `${broad.length} Indices`;
+  document.getElementById('indicesSectoralCount').textContent = `${sectoral.length} Indices`;
+  document.getElementById('indicesThematicCount').textContent = `${thematic.length} Indices`;
+
+  function renderIndexCard(idx) {
+    const chg = idx.change_perc || 0;
+    const isUp = chg >= 0;
+    const colorCls = getHeatmapColorClass(chg);
+    return `
+      <div class="p-3.5 rounded-lg border border-slate-200 transition-all hover:shadow-md cursor-pointer bg-white"
+           onclick="filterByIndex('${idx.name}')"
+           title="Index: ${idx.name}\nLTP: ₹${(idx.ltp || 0).toLocaleString('en-IN')}\nChange: ${isUp ? '+' : ''}${chg.toFixed(2)}%\nTurnover: ${idx.turnover_formatted || '—'}">
+        <div class="flex items-start justify-between gap-1">
+          <div class="font-bold text-slate-800 text-xs truncate" title="${idx.name}">${idx.name}</div>
+          <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded ${colorCls} text-white">
+            ${isUp ? '+' : ''}${chg.toFixed(2)}%
+          </span>
+        </div>
+        <div class="text-base font-black text-slate-900 mt-1">₹${(idx.ltp || 0).toLocaleString('en-IN')}</div>
+        <div class="flex items-center justify-between text-[10px] text-gray-500 mt-2 pt-2 border-t border-slate-100">
+          <span>Turnover</span>
+          <span class="font-mono font-semibold text-slate-700">${idx.turnover_formatted || (idx.turnover_cr ? '₹' + idx.turnover_cr.toLocaleString('en-IN') + ' Cr' : '—')}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  broadGrid.innerHTML = broad.map(renderIndexCard).join('');
+  sectoralGrid.innerHTML = sectoral.map(renderIndexCard).join('');
+  thematicGrid.innerHTML = thematic.map(renderIndexCard).join('');
+}
+
+function filterByIndex(idxName) {
+  // Highlight card in strip
+  document.querySelectorAll('.index-card').forEach(el => {
+    el.classList.toggle('selected', el.innerText.includes(idxName));
+  });
+
+  // Switch to heatmaps tab
+  switchNseTab('heatmaps');
+
+  const sectorMap = {
+    'BANK': 'Banking',
+    'IT': 'IT',
+    'AUTO': 'Auto',
+    'PHARMA': 'Pharma',
+    'FMCG': 'FMCG',
+    'METAL': 'Metals',
+    'REALTY': 'Realty',
+    'ENERGY': 'Energy',
+    'OIL & GAS': 'Energy',
+    'FIN': 'Banking',
+    'MEDIA': 'Media',
+    'CONSUMER': 'Retail',
+    'HEALTHCARE': 'Pharma',
+    'INFRA': 'Infra',
+    'COMMODITIES': 'Metals'
+  };
+
+  const select = document.getElementById('heatmapSectorFilter');
+  if (select) {
+    let matchedSector = 'ALL';
+    const upper = (idxName || '').toUpperCase();
+    for (const [key, sec] of Object.entries(sectorMap)) {
+      if (upper.includes(key)) {
+        matchedSector = sec;
+        break;
+      }
+    }
+    select.value = matchedSector;
+    setHeatmapSubView('sectors');
+    onHeatmapFilterChange();
+  }
+}
+
+function renderIndicesStrip() {
+  const container = document.getElementById('indicesStrip');
+  const indices = catalogData.indices.slice(0, 10);
+  container.innerHTML = indices.map((idx, i) => {
+    const chg = idx.change_perc || 0;
+    const isUp = chg >= 0;
+    const colorClass = isUp ? 'text-emerald-700' : 'text-red-700';
+    const arrow = isUp ? '▲' : '▼';
+    return `
+      <div class="index-card ${i === 0 ? 'selected' : ''}" onclick="filterByIndex('${idx.name}')">
+        <div class="text-xs text-gray-600 font-bold truncate">${idx.name}</div>
+        <div class="text-base font-black text-slate-800">${(idx.ltp || 0).toLocaleString('en-IN')}</div>
+        <div class="text-xs font-semibold ${colorClass}">
+          ${arrow} ${isUp ? '+' : ''}${chg.toFixed(2)}%
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMarketHighlights() {
+  const constituents = catalogData.constituents;
+  const advances = constituents.filter(c => (c.change_perc || 0) > 0).length;
+  const declines = constituents.filter(c => (c.change_perc || 0) < 0).length;
+  document.getElementById('statAdvances').textContent = advances;
+  document.getElementById('statDeclines').textContent = declines;
+}
+
+function renderGainersAndLosers() {
+  const sorted = [...catalogData.constituents].sort((a,b) => (b.change_perc || 0) - (a.change_perc || 0));
+  const gainers = sorted.slice(0, 8);
+  const losers = [...catalogData.constituents].sort((a,b) => (a.change_perc || 0) - (b.change_perc || 0)).slice(0, 8);
+
+  const gainersBody = document.getElementById('topGainersBody');
+  gainersBody.innerHTML = gainers.map(s => `
+    <tr>
+      <td class="font-bold text-[#002B49]">${s.symbol}</td>
+      <td><span class="text-[11px] font-semibold bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">EQ</span></td>
+      <td class="text-right font-semibold">₹${s.ltp.toLocaleString('en-IN')}</td>
+      <td class="text-right"><span class="badge-green">+${s.change_perc.toFixed(2)}%</span></td>
+      <td class="text-right text-gray-600 font-mono">${formatVol(s.volume)}</td>
+      <td class="text-right text-gray-600">₹${s.high?.toLocaleString('en-IN') || s.ltp}</td>
+    </tr>
+  `).join('');
+
+  const losersBody = document.getElementById('topLosersBody');
+  losersBody.innerHTML = losers.map(s => `
+    <tr>
+      <td class="font-bold text-[#002B49]">${s.symbol}</td>
+      <td><span class="text-[11px] font-semibold bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">EQ</span></td>
+      <td class="text-right font-semibold">₹${s.ltp.toLocaleString('en-IN')}</td>
+      <td class="text-right"><span class="badge-red">${s.change_perc.toFixed(2)}%</span></td>
+      <td class="text-right text-gray-600 font-mono">${formatVol(s.volume)}</td>
+      <td class="text-right text-gray-600">₹${s.low?.toLocaleString('en-IN') || s.ltp}</td>
+    </tr>
+  `).join('');
+
+  // Also render Tab 4 full rankings
+  const fullGainers = sorted.slice(0, 25);
+  const fullLosers = [...catalogData.constituents].sort((a,b) => (a.change_perc || 0) - (b.change_perc || 0)).slice(0, 25);
+  document.getElementById('fullGainersBody').innerHTML = fullGainers.map((s, i) => `
+    <tr>
+      <td class="text-gray-400 font-bold">${i + 1}</td>
+      <td class="font-bold text-[#002B49]">${s.symbol} <span class="text-xs text-gray-500 font-normal">(${s.name})</span></td>
+      <td class="text-right font-semibold">₹${s.ltp.toLocaleString('en-IN')}</td>
+      <td class="text-right"><span class="badge-green">+${s.change_perc.toFixed(2)}%</span></td>
+      <td class="text-right text-gray-600 font-mono">${formatVol(s.volume)}</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('fullLosersBody').innerHTML = fullLosers.map((s, i) => `
+    <tr>
+      <td class="text-gray-400 font-bold">${i + 1}</td>
+      <td class="font-bold text-[#002B49]">${s.symbol} <span class="text-xs text-gray-500 font-normal">(${s.name})</span></td>
+      <td class="text-right font-semibold">₹${s.ltp.toLocaleString('en-IN')}</td>
+      <td class="text-right"><span class="badge-red">${s.change_perc.toFixed(2)}%</span></td>
+      <td class="text-right text-gray-600 font-mono">${formatVol(s.volume)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderIndicesTable() {
+  const filter = (document.getElementById('indicesFilter')?.value || '').toLowerCase();
+  const list = catalogData.indices.filter(idx => 
+    !filter || idx.name.toLowerCase().includes(filter) || (idx.category && idx.category.toLowerCase().includes(filter))
+  );
+
+  document.getElementById('allIndicesTableBody').innerHTML = list.map(idx => {
+    const chg = idx.change_perc || 0;
+    const isUp = chg >= 0;
+    return `
+      <tr>
+        <td class="font-bold text-[#002B49]">${idx.name}</td>
+        <td><span class="text-[11px] font-semibold bg-blue-50 text-blue-800 px-2 py-0.5 rounded">${idx.category || 'BROAD'}</span></td>
+        <td class="text-right font-black">₹${(idx.ltp || 0).toLocaleString('en-IN')}</td>
+        <td class="text-right"><span class="${isUp ? 'badge-green' : 'badge-red'}">${isUp ? '+' : ''}${chg.toFixed(2)}%</span></td>
+        <td class="text-right text-gray-600">${idx.open ? '₹' + idx.open.toLocaleString('en-IN') : '—'}</td>
+        <td class="text-right text-gray-600">${idx.high ? '₹' + idx.high.toLocaleString('en-IN') : '—'}</td>
+        <td class="text-right text-gray-600">${idx.low ? '₹' + idx.low.toLocaleString('en-IN') : '—'}</td>
+        <td class="text-right font-mono font-semibold">${idx.turnover_formatted || (idx.turnover_cr ? '₹' + idx.turnover_cr.toLocaleString('en-IN') + ' Cr' : '—')}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderBhavcopyTable() {
+  const filter = (document.getElementById('bhavcopyFilter')?.value || '').toLowerCase();
+  let list = [...catalogData.constituents];
+
+  if (filter) {
+    list = list.filter(c => 
+      c.symbol.toLowerCase().includes(filter) || 
+      c.name.toLowerCase().includes(filter) ||
+      (c.isin && c.isin.toLowerCase().includes(filter)) ||
+      (c.sector && c.sector.toLowerCase().includes(filter))
+    );
+  }
+
+  list.sort((a,b) => {
+    const va = a[bhavcopySortKey], vb = b[bhavcopySortKey];
+    if (typeof va === 'string') return bhavcopySortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    return bhavcopySortAsc ? (va || 0) - (vb || 0) : (vb || 0) - (va || 0);
+  });
+
+  document.getElementById('bhavcopyTableBody').innerHTML = list.map(s => {
+    const chg = s.change_perc || 0;
+    const isUp = chg >= 0;
+    return `
+      <tr>
+        <td class="font-bold text-[#002B49]">${s.symbol}</td>
+        <td class="font-medium text-slate-800">${s.name}</td>
+        <td><span class="text-[11px] font-semibold bg-gray-100 text-gray-700 px-2 py-0.5 rounded">${s.sector || 'EQ'}</span></td>
+        <td class="text-right text-gray-600 font-mono">₹${s.open?.toLocaleString('en-IN') || s.ltp}</td>
+        <td class="text-right text-gray-600 font-mono">₹${s.high?.toLocaleString('en-IN') || s.ltp}</td>
+        <td class="text-right text-gray-600 font-mono">₹${s.low?.toLocaleString('en-IN') || s.ltp}</td>
+        <td class="text-right font-black text-slate-900 font-mono">₹${s.ltp.toLocaleString('en-IN')}</td>
+        <td class="text-right"><span class="${isUp ? 'badge-green' : 'badge-red'}">${isUp ? '+' : ''}${chg.toFixed(2)}%</span></td>
+        <td class="text-right font-mono font-semibold text-slate-700">${(s.volume || 0).toLocaleString('en-IN')}</td>
+        <td class="text-xs text-gray-500 font-mono">${s.isin || '—'}</td>
+        <td>
+          <a href="/?symbol=${s.symbol}" class="px-2 py-1 bg-orange-100 text-orange-800 rounded font-semibold text-xs hover:bg-orange-200">
+            Analyze
+          </a>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterBhavcopyTable() {
+  renderBhavcopyTable();
+}
+
+function sortBhavcopy(key) {
+  if (bhavcopySortKey === key) {
+    bhavcopySortAsc = !bhavcopySortAsc;
+  } else {
+    bhavcopySortKey = key;
+    bhavcopySortAsc = key === 'symbol' || key === 'name';
+  }
+  renderBhavcopyTable();
+}
+
+function renderVolumeGainers() {
+  const byVolume = [...catalogData.constituents].sort((a,b) => (b.volume || 0) - (a.volume || 0)).slice(0, 15);
+  const byValue = [...catalogData.constituents].sort((a,b) => ((b.volume || 0) * (b.ltp || 0)) - ((a.volume || 0) * (a.ltp || 0))).slice(0, 15);
+
+  document.getElementById('mostActiveVolumeBody').innerHTML = byVolume.map(s => `
+    <tr>
+      <td class="font-bold text-[#002B49]">${s.symbol}</td>
+      <td class="text-gray-700">${s.name}</td>
+      <td class="text-right font-bold">₹${s.ltp.toLocaleString('en-IN')}</td>
+      <td class="text-right"><span class="${s.change_perc >= 0 ? 'badge-green' : 'badge-red'}">${s.change_perc >= 0 ? '+' : ''}${s.change_perc.toFixed(2)}%</span></td>
+      <td class="text-right font-mono font-bold text-slate-800">${(s.volume || 0).toLocaleString('en-IN')}</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('mostActiveValueBody').innerHTML = byValue.map(s => {
+    const valCr = ((s.volume || 0) * s.ltp) / 10000000;
+    return `
+      <tr>
+        <td class="font-bold text-[#002B49]">${s.symbol}</td>
+        <td class="text-gray-700">${s.name}</td>
+        <td class="text-right font-bold">₹${s.ltp.toLocaleString('en-IN')}</td>
+        <td class="text-right"><span class="${s.change_perc >= 0 ? 'badge-green' : 'badge-red'}">${s.change_perc >= 0 ? '+' : ''}${s.change_perc.toFixed(2)}%</span></td>
+        <td class="text-right font-mono font-bold text-slate-800">₹${valCr.toFixed(2)} Cr</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function setupSearch() {
+  const input = document.getElementById('nseSearchInput');
+  const box = document.getElementById('nseSuggestBox');
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    if (q.length < 2) { box.classList.remove('open'); return; }
+    const matches = catalogData.constituents.filter(s => 
+      s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)
+    ).slice(0, 8);
+
+    if (matches.length === 0) { box.classList.remove('open'); return; }
+    box.innerHTML = matches.map(s => `
+      <div class="suggest-row" onclick="window.location.href='/?symbol=${s.symbol}'">
+        <div>
+          <b class="text-[#002B49]">${s.symbol}</b>
+          <span class="text-xs text-gray-500 ml-2">${s.name}</span>
+        </div>
+        <div class="text-right">
+          <div class="font-bold">₹${s.ltp.toLocaleString('en-IN')}</div>
+          <div class="text-xs ${s.change_perc >= 0 ? 'text-emerald-700' : 'text-red-700'}">${s.change_perc >= 0 ? '+' : ''}${s.change_perc}%</div>
+        </div>
+      </div>
+    `).join('');
+    box.classList.add('open');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target) && !box.contains(e.target)) {
+      box.classList.remove('open');
+    }
+  });
+}
+
+function formatVol(v) {
+  if (!v) return '—';
+  if (v >= 10000000) return (v / 10000000).toFixed(2) + ' Cr';
+  if (v >= 100000) return (v / 100000).toFixed(2) + ' L';
+  if (v >= 1000) return (v / 1000).toFixed(0) + ' K';
+  return v.toString();
+}
+
+function downloadBhavcopyCSV() {
+  const headers = ['Symbol', 'Security Name', 'Sector', 'Open', 'High', 'Low', 'Close', 'Change%', 'Volume', 'ISIN'];
+  const rows = catalogData.constituents.map(c => [
+    c.symbol, `"${c.name}"`, c.sector || 'EQ', c.open || c.ltp, c.high || c.ltp, c.low || c.ltp, c.ltp, c.change_perc, c.volume, c.isin
+  ]);
+  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `NSE_CM_Bhavcopy_Report_${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
+<script src="/agentation.bundle.js"></script>
+</body>
+</html>
+
