@@ -1,0 +1,757 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Landmark,
+  Building2,
+  Users,
+  TrendingUp,
+  TrendingDown,
+  Search,
+  Filter,
+  ExternalLink,
+  ShieldCheck,
+  Zap,
+  ArrowUpRight,
+  ArrowDownRight,
+  DollarSign,
+  Briefcase,
+  Layers,
+  Calendar,
+  CheckCircle2,
+  Clock
+} from 'lucide-react';
+import { formatIndianCurrency, formatVolume } from '../utils/formatters.js';
+import { getAsmStatus } from '../utils/asmRegistry.js';
+
+export default function BlockDealsTab({ onSelectStock }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [subView, setSubView] = useState('block'); // 'block' | 'bulk' | 'insider' | 'fii-dii' | 'all'
+  const [filterAction, setFilterAction] = useState('ALL'); // 'ALL' | 'BUY' | 'SELL' | 'MEGA'
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch Institutional Deals Data from Server
+  useEffect(() => {
+    async function loadDeals() {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/deals');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error('Failed to load institutional deals:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDeals();
+  }, []);
+
+  const summary = data?.summary;
+  const fiiDiiFlows = data?.fiiDiiFlows;
+
+  // Filtered Block Deals
+  const filteredBlockDeals = useMemo(() => {
+    if (!data?.blockDeals) return [];
+    let list = data.blockDeals;
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(d => 
+        d.symbol.toLowerCase().includes(q) ||
+        d.companyName.toLowerCase().includes(q) ||
+        d.clientName.toLowerCase().includes(q) ||
+        d.counterparty.toLowerCase().includes(q)
+      );
+    }
+    if (filterAction === 'BUY') list = list.filter(d => d.dealType === 'BUY');
+    if (filterAction === 'SELL') list = list.filter(d => d.dealType === 'SELL');
+    if (filterAction === 'MEGA') list = list.filter(d => d.dealValueCr >= 400);
+    return list;
+  }, [data?.blockDeals, searchQuery, filterAction]);
+
+  // Filtered Bulk Deals
+  const filteredBulkDeals = useMemo(() => {
+    if (!data?.bulkDeals) return [];
+    let list = data.bulkDeals;
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(d => 
+        d.symbol.toLowerCase().includes(q) ||
+        d.companyName.toLowerCase().includes(q) ||
+        d.clientName.toLowerCase().includes(q)
+      );
+    }
+    if (filterAction === 'BUY') list = list.filter(d => d.dealType === 'BUY');
+    if (filterAction === 'SELL') list = list.filter(d => d.dealType === 'SELL');
+    if (filterAction === 'MEGA') list = list.filter(d => d.dealValueCr >= 200);
+    return list;
+  }, [data?.bulkDeals, searchQuery, filterAction]);
+
+  // Filtered Insider & Promoter Filings
+  const filteredInsiderTrades = useMemo(() => {
+    if (!data?.insiderTrades) return [];
+    let list = data.insiderTrades;
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(d => 
+        d.symbol.toLowerCase().includes(q) ||
+        d.companyName.toLowerCase().includes(q) ||
+        d.personName.toLowerCase().includes(q) ||
+        d.designation.toLowerCase().includes(q)
+      );
+    }
+    if (filterAction === 'BUY') list = list.filter(d => d.action === 'BUY');
+    if (filterAction === 'SELL') list = list.filter(d => d.action === 'SELL');
+    if (filterAction === 'MEGA') list = list.filter(d => d.dealValueCr >= 200);
+    return list;
+  }, [data?.insiderTrades, searchQuery, filterAction]);
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* 1. Header & Institutional Apex Metrics Strip */}
+      <div className="neopop-card p-4 sm:p-5 border-2 border-black bg-[#151515] rounded-[4px] shadow-[4px_4px_0px_#000000]">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b-2 border-black">
+          <div className="flex items-center gap-2.5">
+            <span className="p-2 rounded-[3px] bg-[#111111] text-[#FEE360] border-2 border-black shadow-[2px_2px_0px_#000000]">
+              <Landmark className="w-5 h-5 text-[#FEE360]" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-[#00E887] border border-black shadow-[1px_1px_0px_#000]"></span>
+                <h2 className="neopop-heading font-black text-lg sm:text-xl text-white tracking-tight uppercase">
+                  Institutional Flow &amp; Smart Money Deals Radar
+                </h2>
+                <span className="neopop-tag bg-[#1E1E1E] text-[#00E887]">
+                  NSE Windows &bull; SEBI SAST Filings
+                </span>
+              </div>
+              <p className="neopop-body text-xs text-zinc-400 mt-1">
+                Real-time tracking of Exchange Block Windows, Bulk Orders (&gt;0.5% Stake), Promoter Accumulation / Disposals, and Provisional FII/DII Cash Inflows.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="neopop-tag bg-[#1E1E1E] text-[#FEE360] font-mono font-black">
+              Session: {summary?.sessionDate || '2026-11-09'}
+            </span>
+          </div>
+        </div>
+
+        {/* 4 Apex Metric Plinths */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Block Deals Turnover */}
+          <div
+            onClick={() => setSubView('block')}
+            className={`p-3 rounded-[3px] border-2 border-black cursor-pointer transition-all ${
+              subView === 'block' ? 'bg-[#1F1F1F] shadow-[3px_3px_0px_#FEE360]' : 'bg-[#111111] shadow-[2px_2px_0px_#000000] hover:bg-[#1A1A1A]'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono text-[#FEE360] font-bold uppercase flex items-center gap-1">
+                <Building2 className="w-3 h-3 text-[#FEE360]" /> Block Deals Window
+              </span>
+              <span className="neopop-tag bg-[#FEE360] text-black text-[9px] py-0 px-1 font-black">
+                {summary?.blockDealsCount || 10} Trades
+              </span>
+            </div>
+            <div className="text-base sm:text-lg font-black font-mono text-white mt-1">
+              ₹{(summary?.totalBlockTurnoverCr || 4827.9).toLocaleString('en-IN')} Cr
+            </div>
+            <div className="text-[10px] text-zinc-400 font-mono mt-0.5">
+              Trades &ge; ₹10 Cr / 5L Shares
+            </div>
+          </div>
+
+          {/* Bulk Deals Value */}
+          <div
+            onClick={() => setSubView('bulk')}
+            className={`p-3 rounded-[3px] border-2 border-black cursor-pointer transition-all ${
+              subView === 'bulk' ? 'bg-[#1F1F1F] shadow-[3px_3px_0px_#FEE360]' : 'bg-[#111111] shadow-[2px_2px_0px_#000000] hover:bg-[#1A1A1A]'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase flex items-center gap-1">
+                <Briefcase className="w-3 h-3 text-cyan-400" /> Bulk Deals Feed
+              </span>
+              <span className="neopop-tag bg-cyan-400 text-black text-[9px] py-0 px-1 font-black">
+                {summary?.bulkDealsCount || 8} Filings
+              </span>
+            </div>
+            <div className="text-base sm:text-lg font-black font-mono text-white mt-1">
+              ₹{(summary?.totalBulkTurnoverCr || 2127.3).toLocaleString('en-IN')} Cr
+            </div>
+            <div className="text-[10px] text-zinc-400 font-mono mt-0.5">
+              Single Orders &gt; 0.5% Capital
+            </div>
+          </div>
+
+          {/* Net Promoter Action */}
+          <div
+            onClick={() => setSubView('insider')}
+            className={`p-3 rounded-[3px] border-2 border-black cursor-pointer transition-all ${
+              subView === 'insider' ? 'bg-[#1F1F1F] shadow-[3px_3px_0px_#FEE360]' : 'bg-[#111111] shadow-[2px_2px_0px_#000000] hover:bg-[#1A1A1A]'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono text-[#00E887] font-bold uppercase flex items-center gap-1">
+                <Users className="w-3 h-3 text-[#00E887]" /> Promoter Accumulation
+              </span>
+              <span className="neopop-tag bg-[#00E887] text-black text-[9px] py-0 px-1 font-black">
+                {summary?.insiderFilingsCount || 7} SEBI SAST
+              </span>
+            </div>
+            <div className="text-base sm:text-lg font-black font-mono text-[#00E887] mt-1">
+              +₹{(summary?.netPromoterCr || 305.0).toLocaleString('en-IN')} Cr Net
+            </div>
+            <div className="text-[10px] text-zinc-400 font-mono mt-0.5">
+              Buy ₹{summary?.promoterBuyCr || 928} Cr &bull; Sell ₹{summary?.promoterSellCr || 623} Cr
+            </div>
+          </div>
+
+          {/* FII / DII Net Cash Flow */}
+          <div
+            onClick={() => setSubView('fii-dii')}
+            className={`p-3 rounded-[3px] border-2 border-black cursor-pointer transition-all ${
+              subView === 'fii-dii' ? 'bg-[#1F1F1F] shadow-[3px_3px_0px_#FEE360]' : 'bg-[#111111] shadow-[2px_2px_0px_#000000] hover:bg-[#1A1A1A]'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono text-[#3657FF] font-bold uppercase flex items-center gap-1">
+                <DollarSign className="w-3 h-3 text-[#3657FF]" /> FII / DII Net Inflow
+              </span>
+              <span className="neopop-tag bg-[#3657FF] text-white text-[9px] py-0 px-1 font-black">
+                Institutional
+              </span>
+            </div>
+            <div className="text-base sm:text-lg font-black font-mono text-white mt-1">
+              +₹{(summary?.totalNetInstitutionalCr || 4293.3).toLocaleString('en-IN')} Cr
+            </div>
+            <div className="text-[10px] text-zinc-400 font-mono mt-0.5">
+              FII +₹{summary?.fiiNetFlowCr || 1842} Cr &bull; DII +₹{summary?.diiNetFlowCr || 2451} Cr
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Control Toolbar (Sub-Views & Filters) */}
+      <div className="neopop-card p-3 sm:p-4 border-2 border-black bg-[#171717] rounded-[4px] shadow-[4px_4px_0px_#000000] flex flex-wrap items-center justify-between gap-3">
+        {/* Sub-View Mode Selector */}
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <button
+            onClick={() => setSubView('block')}
+            className={`neopop-btn text-xs px-2.5 sm:px-3 py-1 flex items-center gap-1.5 ${
+              subView === 'block' ? 'neopop-btn-primary' : 'neopop-btn-dark'
+            }`}
+          >
+            <Building2 className="w-3 h-3" />
+            <span>Block Deals Window</span>
+          </button>
+          <button
+            onClick={() => setSubView('bulk')}
+            className={`neopop-btn text-xs px-2.5 sm:px-3 py-1 flex items-center gap-1.5 ${
+              subView === 'bulk' ? 'neopop-btn-primary' : 'neopop-btn-dark'
+            }`}
+          >
+            <Briefcase className="w-3 h-3" />
+            <span>Bulk Deals (&gt;0.5%)</span>
+          </button>
+          <button
+            onClick={() => setSubView('insider')}
+            className={`neopop-btn text-xs px-2.5 sm:px-3 py-1 flex items-center gap-1.5 ${
+              subView === 'insider' ? 'neopop-btn-primary' : 'neopop-btn-dark'
+            }`}
+          >
+            <Users className="w-3 h-3" />
+            <span>Promoter &amp; Insider Filings</span>
+          </button>
+          <button
+            onClick={() => setSubView('fii-dii')}
+            className={`neopop-btn text-xs px-2.5 sm:px-3 py-1 flex items-center gap-1.5 ${
+              subView === 'fii-dii' ? 'neopop-btn-primary' : 'neopop-btn-dark'
+            }`}
+          >
+            <DollarSign className="w-3 h-3" />
+            <span>FII &amp; DII Trend</span>
+          </button>
+        </div>
+
+        {/* Action Filters & Search */}
+        <div className="flex flex-wrap items-center gap-2">
+          {subView !== 'fii-dii' && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setFilterAction('ALL')}
+                className={`neopop-btn text-[11px] px-2.5 py-1 ${
+                  filterAction === 'ALL' ? 'neopop-btn-secondary' : 'neopop-btn-dark'
+                }`}
+              >
+                All Actions
+              </button>
+              <button
+                onClick={() => setFilterAction('BUY')}
+                className={`neopop-btn text-[11px] px-2.5 py-1 ${
+                  filterAction === 'BUY' ? 'neopop-btn-success' : 'neopop-btn-dark'
+                }`}
+              >
+                Buys Only
+              </button>
+              <button
+                onClick={() => setFilterAction('SELL')}
+                className={`neopop-btn text-[11px] px-2.5 py-1 ${
+                  filterAction === 'SELL' ? 'neopop-btn-danger' : 'neopop-btn-dark'
+                }`}
+              >
+                Sells Only
+              </button>
+              <button
+                onClick={() => setFilterAction('MEGA')}
+                className={`neopop-btn text-[11px] px-2.5 py-1 ${
+                  filterAction === 'MEGA' ? 'neopop-btn-primary' : 'neopop-btn-dark'
+                }`}
+              >
+                Mega Blocks
+              </button>
+            </div>
+          )}
+
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Filter symbol or entity..."
+              className="neopop-input pl-8 pr-3 py-1 text-xs font-mono font-medium text-white placeholder-zinc-500 w-44 sm:w-56"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 3. SUB-VIEW: Block Deals Table */}
+      {subView === 'block' && (
+        <div className="neopop-card overflow-hidden border-2 border-black bg-[#171717] rounded-[4px] shadow-[4px_4px_0px_#000000]">
+          <div className="px-4 py-3 border-b-2 border-black flex items-center justify-between bg-[#1A1A1A]">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#FEE360]" />
+              <h3 className="neopop-heading font-black text-white text-xs sm:text-sm tracking-tight uppercase">
+                NSE Block Deal Window Executions
+              </h3>
+              <span className="neopop-tag bg-[#1E1E1E] text-zinc-300">
+                {filteredBlockDeals.length} Deals Displayed
+              </span>
+            </div>
+            <span className="text-[11px] font-mono text-zinc-400 hidden sm:inline">
+              Minimum Threshold: ₹10 Cr or 5,00,000 Equity Shares
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left border-collapse table-auto">
+              <thead>
+                <tr className="border-b-2 border-black text-zinc-400 text-[10px] uppercase tracking-wider font-mono font-bold bg-[#141414]">
+                  <th className="py-2.5 px-3">Session &amp; Window</th>
+                  <th className="py-2.5 px-3">Symbol &amp; Company</th>
+                  <th className="py-2.5 px-3">Purchaser (Client Name)</th>
+                  <th className="py-2.5 px-3">Seller (Counterparty)</th>
+                  <th className="py-2.5 px-3 text-center">Type</th>
+                  <th className="py-2.5 px-3 text-right font-mono">Qty</th>
+                  <th className="py-2.5 px-3 text-right font-mono">Price (₹)</th>
+                  <th className="py-2.5 px-3 text-right font-mono">Value (₹ Cr)</th>
+                  <th className="py-2.5 px-3 text-center w-16">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#222222] font-medium">
+                {filteredBlockDeals.map((d) => (
+                  <tr
+                    key={d.id}
+                    onClick={() => onSelectStock && onSelectStock({ symbol: d.symbol, ltp: d.cmp })}
+                    className="hover:bg-[#1E1E1E] transition-colors cursor-pointer group"
+                  >
+                    <td className="py-2.5 px-3 font-mono text-zinc-400 text-[11px]">
+                      <div>{d.date}</div>
+                      <div className="text-[9px] text-zinc-500">{d.window}</div>
+                    </td>
+                    <td className="py-2.5 px-3 font-bold text-white">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="group-hover:text-[#FEE360] transition-colors text-xs font-black font-mono">
+                          {d.symbol}
+                        </span>
+                        {getAsmStatus(d.symbol).isAsm && (
+                          <span className="neopop-tag bg-[#FF5959]/20 text-[#FF5959] border border-[#FF5959]/40 text-[9px] py-0 px-1 font-black" title="SEBI / NSE ASM Surveillance">
+                            ASM
+                          </span>
+                        )}
+                        <span className="neopop-tag bg-[#1E1E1E] text-zinc-300 text-[9px] py-0 px-1 border-black">
+                          {d.category}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-zinc-400 font-normal truncate max-w-[140px]">
+                        {d.companyName}
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3 text-white font-bold text-xs truncate max-w-[200px]" title={d.clientName}>
+                      {d.clientName}
+                    </td>
+                    <td className="py-2.5 px-3 text-zinc-400 text-[11px] truncate max-w-[180px]" title={d.counterparty}>
+                      {d.counterparty}
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-mono">
+                      <span className={`neopop-tag text-[10px] font-black ${
+                        d.dealType === 'BUY' ? 'bg-[#00E887] text-black' : 'bg-[#FF5959] text-white'
+                      }`}>
+                        {d.dealType}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono text-white text-xs">
+                      {d.quantity.toLocaleString('en-IN')}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono text-white text-xs">
+                      ₹{d.tradePrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono font-black text-[#FEE360] text-xs">
+                      ₹{d.dealValueCr.toFixed(2)} Cr
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onSelectStock && onSelectStock({ symbol: d.symbol, ltp: d.cmp }); }}
+                        className="neopop-btn neopop-btn-dark text-[10px] px-2 py-1"
+                      >
+                        <span>Inspect</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 4. SUB-VIEW: Bulk Deals Table */}
+      {subView === 'bulk' && (
+        <div className="neopop-card overflow-hidden border-2 border-black bg-[#171717] rounded-[4px] shadow-[4px_4px_0px_#000000]">
+          <div className="px-4 py-3 border-b-2 border-black flex items-center justify-between bg-[#1A1A1A]">
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-cyan-400" />
+              <h3 className="neopop-heading font-black text-white text-xs sm:text-sm tracking-tight uppercase">
+                Exchange Bulk Deals Feed (&gt; 0.5% Total Equity Shares)
+              </h3>
+              <span className="neopop-tag bg-[#1E1E1E] text-zinc-300">
+                {filteredBulkDeals.length} Deals Displayed
+              </span>
+            </div>
+            <span className="text-[11px] font-mono text-zinc-400 hidden sm:inline">
+              Transactions exceeding 0.5% of total listed capital
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left border-collapse table-auto">
+              <thead>
+                <tr className="border-b-2 border-black text-zinc-400 text-[10px] uppercase tracking-wider font-mono font-bold bg-[#141414]">
+                  <th className="py-2.5 px-3">Date</th>
+                  <th className="py-2.5 px-3">Symbol &amp; Company</th>
+                  <th className="py-2.5 px-3">Client Entity / Investor</th>
+                  <th className="py-2.5 px-3 text-center">Category</th>
+                  <th className="py-2.5 px-3 text-center">Action</th>
+                  <th className="py-2.5 px-3 text-right font-mono">Qty</th>
+                  <th className="py-2.5 px-3 text-right font-mono">Avg Price (₹)</th>
+                  <th className="py-2.5 px-3 text-right font-mono">Total (₹ Cr)</th>
+                  <th className="py-2.5 px-3 text-center font-mono">Stake %</th>
+                  <th className="py-2.5 px-3 text-center w-16">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#222222] font-medium">
+                {filteredBulkDeals.map((d) => (
+                  <tr
+                    key={d.id}
+                    onClick={() => onSelectStock && onSelectStock({ symbol: d.symbol, ltp: d.cmp })}
+                    className="hover:bg-[#1E1E1E] transition-colors cursor-pointer group"
+                  >
+                    <td className="py-2.5 px-3 font-mono text-zinc-400 text-[11px]">
+                      {d.date}
+                    </td>
+                    <td className="py-2.5 px-3 font-bold text-white">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="group-hover:text-[#FEE360] transition-colors text-xs font-black font-mono">
+                          {d.symbol}
+                        </span>
+                        {getAsmStatus(d.symbol).isAsm && (
+                          <span className="neopop-tag bg-[#FF5959]/20 text-[#FF5959] border border-[#FF5959]/40 text-[9px] py-0 px-1 font-black" title="SEBI / NSE ASM Surveillance">
+                            ASM
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-zinc-400 font-normal truncate max-w-[150px]">
+                        {d.companyName}
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3 text-white font-bold text-xs truncate max-w-[220px]" title={d.clientName}>
+                      {d.clientName}
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-mono">
+                      <span className="neopop-tag bg-[#1E1E1E] text-zinc-300 text-[10px]">
+                        {d.category}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-mono">
+                      <span className={`neopop-tag text-[10px] font-black ${
+                        d.dealType === 'BUY' ? 'bg-[#00E887] text-black' : 'bg-[#FF5959] text-white'
+                      }`}>
+                        {d.dealType}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono text-white text-xs">
+                      {d.quantity.toLocaleString('en-IN')}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono text-white text-xs">
+                      ₹{d.tradePrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono font-black text-[#FEE360] text-xs">
+                      ₹{d.dealValueCr.toFixed(2)} Cr
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-mono text-xs font-bold text-[#00E887]">
+                      {d.stakePct}%
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onSelectStock && onSelectStock({ symbol: d.symbol, ltp: d.cmp }); }}
+                        className="neopop-btn neopop-btn-dark text-[10px] px-2 py-1"
+                      >
+                        <span>Inspect</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 5. SUB-VIEW: Promoter & Insider Filings */}
+      {subView === 'insider' && (
+        <div className="neopop-card overflow-hidden border-2 border-black bg-[#171717] rounded-[4px] shadow-[4px_4px_0px_#000000]">
+          <div className="px-4 py-3 border-b-2 border-black flex items-center justify-between bg-[#1A1A1A]">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#00E887]" />
+              <h3 className="neopop-heading font-black text-white text-xs sm:text-sm tracking-tight uppercase">
+                Promoter &amp; Insider Trading Disclosures (SEBI SAST &amp; PIT)
+              </h3>
+              <span className="neopop-tag bg-[#1E1E1E] text-[#00E887]">
+                {filteredInsiderTrades.length} Regulatory Filings
+              </span>
+            </div>
+            <span className="text-[11px] font-mono text-zinc-400 hidden sm:inline">
+              SEBI Prohibition of Insider Trading &amp; Substantial Acquisition Regulations
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left border-collapse table-auto">
+              <thead>
+                <tr className="border-b-2 border-black text-zinc-400 text-[10px] uppercase tracking-wider font-mono font-bold bg-[#141414]">
+                  <th className="py-2.5 px-3">Date &amp; Regulation</th>
+                  <th className="py-2.5 px-3">Symbol &amp; Company</th>
+                  <th className="py-2.5 px-3">Promoter / Insider Entity</th>
+                  <th className="py-2.5 px-3">Designation</th>
+                  <th className="py-2.5 px-3 text-center">Mode</th>
+                  <th className="py-2.5 px-3 text-right font-mono">Qty</th>
+                  <th className="py-2.5 px-3 text-right font-mono">Value (₹ Cr)</th>
+                  <th className="py-2.5 px-3 text-center font-mono">Pre &rarr; Post Stake</th>
+                  <th className="py-2.5 px-3 text-center">Signal Verdict</th>
+                  <th className="py-2.5 px-3 text-center w-16">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#222222] font-medium">
+                {filteredInsiderTrades.map((d) => (
+                  <tr
+                    key={d.id}
+                    onClick={() => onSelectStock && onSelectStock({ symbol: d.symbol })}
+                    className="hover:bg-[#1E1E1E] transition-colors cursor-pointer group"
+                  >
+                    <td className="py-2.5 px-3 font-mono text-zinc-400 text-[11px]">
+                      <div>{d.date}</div>
+                      <div className="text-[9px] text-zinc-500">{d.regulation}</div>
+                    </td>
+                    <td className="py-2.5 px-3 font-bold text-white">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="group-hover:text-[#FEE360] transition-colors text-xs font-black font-mono">
+                          {d.symbol}
+                        </span>
+                        {getAsmStatus(d.symbol).isAsm && (
+                          <span className="neopop-tag bg-[#FF5959]/20 text-[#FF5959] border border-[#FF5959]/40 text-[9px] py-0 px-1 font-black" title="SEBI / NSE ASM Surveillance">
+                            ASM
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-zinc-400 font-normal truncate max-w-[140px]">
+                        {d.companyName}
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3 text-white font-bold text-xs truncate max-w-[200px]" title={d.personName}>
+                      {d.personName}
+                    </td>
+                    <td className="py-2.5 px-3 text-zinc-300 text-[11px] truncate max-w-[160px]">
+                      {d.designation}
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-mono">
+                      <span className={`neopop-tag text-[9px] font-black ${
+                        d.action === 'BUY' ? 'bg-[#00E887] text-black' : d.action === 'SELL' ? 'bg-[#FF5959] text-white' : 'bg-[#1E1E1E] text-zinc-400'
+                      }`}>
+                        {d.transactionType}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono text-white text-xs">
+                      {d.quantity.toLocaleString('en-IN')}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono font-black text-[#FEE360] text-xs">
+                      ₹{d.dealValueCr.toFixed(2)} Cr
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-mono text-[11px] font-bold text-white">
+                      {d.preStakePct}% &rarr; {d.postStakePct}%
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-mono">
+                      <span className={`neopop-tag text-[10px] font-black ${
+                        d.action === 'BUY' ? 'bg-[#00E887] text-black' : d.action === 'SELL' ? 'bg-[#FF5959] text-white' : 'bg-[#FEE360] text-black'
+                      }`}>
+                        {d.signal.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onSelectStock && onSelectStock({ symbol: d.symbol }); }}
+                        className="neopop-btn neopop-btn-dark text-[10px] px-2 py-1"
+                      >
+                        <span>Inspect</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 6. SUB-VIEW: FII & DII Cash Market Trend */}
+      {subView === 'fii-dii' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* FII Card */}
+            <div className="neopop-card p-5 border-2 border-black bg-[#171717] rounded-[4px] shadow-[4px_4px_0px_#000000]">
+              <div className="flex items-center justify-between pb-3 border-b-2 border-black">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 bg-[#3657FF] border border-black shadow-[1px_1px_0px_#000]"></span>
+                  <h3 className="neopop-heading font-black text-white text-sm uppercase">Foreign Institutional Investors (FII)</h3>
+                </div>
+                <span className="neopop-tag bg-[#00E887] text-black font-black">NET BUYER</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mt-4 text-center font-mono">
+                <div className="p-2.5 bg-[#111111] border border-black rounded-[3px]">
+                  <div className="text-[10px] text-zinc-400 uppercase">Gross Purchase</div>
+                  <div className="text-sm font-black text-[#00E887] mt-1">₹{fiiDiiFlows?.fii.buyValueCr.toLocaleString('en-IN')} Cr</div>
+                </div>
+                <div className="p-2.5 bg-[#111111] border border-black rounded-[3px]">
+                  <div className="text-[10px] text-zinc-400 uppercase">Gross Sales</div>
+                  <div className="text-sm font-black text-[#FF5959] mt-1">₹{fiiDiiFlows?.fii.sellValueCr.toLocaleString('en-IN')} Cr</div>
+                </div>
+                <div className="p-2.5 bg-[#111111] border-2 border-black rounded-[3px] shadow-[2px_2px_0px_#000]">
+                  <div className="text-[10px] text-zinc-300 uppercase font-black">Net Cash Inflow</div>
+                  <div className="text-base font-black text-[#00E887] mt-1">+₹{fiiDiiFlows?.fii.netValueCr.toLocaleString('en-IN')} Cr</div>
+                </div>
+              </div>
+            </div>
+
+            {/* DII Card */}
+            <div className="neopop-card p-5 border-2 border-black bg-[#171717] rounded-[4px] shadow-[4px_4px_0px_#000000]">
+              <div className="flex items-center justify-between pb-3 border-b-2 border-black">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 bg-[#00E887] border border-black shadow-[1px_1px_0px_#000]"></span>
+                  <h3 className="neopop-heading font-black text-white text-sm uppercase">Domestic Institutional Investors (DII)</h3>
+                </div>
+                <span className="neopop-tag bg-[#00E887] text-black font-black">NET BUYER</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mt-4 text-center font-mono">
+                <div className="p-2.5 bg-[#111111] border border-black rounded-[3px]">
+                  <div className="text-[10px] text-zinc-400 uppercase">Gross Purchase</div>
+                  <div className="text-sm font-black text-[#00E887] mt-1">₹{fiiDiiFlows?.dii.buyValueCr.toLocaleString('en-IN')} Cr</div>
+                </div>
+                <div className="p-2.5 bg-[#111111] border border-black rounded-[3px]">
+                  <div className="text-[10px] text-zinc-400 uppercase">Gross Sales</div>
+                  <div className="text-sm font-black text-[#FF5959] mt-1">₹{fiiDiiFlows?.dii.sellValueCr.toLocaleString('en-IN')} Cr</div>
+                </div>
+                <div className="p-2.5 bg-[#111111] border-2 border-black rounded-[3px] shadow-[2px_2px_0px_#000]">
+                  <div className="text-[10px] text-zinc-300 uppercase font-black">Net Cash Inflow</div>
+                  <div className="text-base font-black text-[#00E887] mt-1">+₹{fiiDiiFlows?.dii.netValueCr.toLocaleString('en-IN')} Cr</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Historical Trend Table */}
+          <div className="neopop-card overflow-hidden border-2 border-black bg-[#171717] rounded-[4px] shadow-[4px_4px_0px_#000000]">
+            <div className="px-4 py-3 border-b-2 border-black flex items-center justify-between bg-[#1A1A1A]">
+              <h3 className="neopop-heading font-black text-white text-xs sm:text-sm uppercase">
+                Provisional FII &amp; DII Daily Net Flow History (₹ Cr)
+              </h3>
+              <span className="neopop-tag bg-[#1E1E1E] text-zinc-300">
+                Official Exchange Settlement
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border-collapse table-auto">
+                <thead>
+                  <tr className="border-b-2 border-black text-zinc-400 text-[10px] uppercase tracking-wider font-mono font-bold bg-[#141414]">
+                    <th className="py-2.5 px-3">Session Date</th>
+                    <th className="py-2.5 px-3 text-right font-mono">FII Net Flow (₹ Cr)</th>
+                    <th className="py-2.5 px-3 text-right font-mono">DII Net Flow (₹ Cr)</th>
+                    <th className="py-2.5 px-3 text-right font-mono">Combined Institutional Net</th>
+                    <th className="py-2.5 px-3 text-center">Market Bias</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#222222] font-mono">
+                  {fiiDiiFlows?.historicalTrend30d.map((h) => {
+                    const totalIsUp = h.total >= 0;
+                    const fiiIsUp = h.fiiNet >= 0;
+                    const diiIsUp = h.diiNet >= 0;
+
+                    return (
+                      <tr key={h.date} className="hover:bg-[#1E1E1E] transition-colors">
+                        <td className="py-2.5 px-3 text-white font-bold">{h.date}</td>
+                        <td className={`py-2.5 px-3 text-right font-bold ${fiiIsUp ? 'text-[#00E887]' : 'text-[#FF5959]'}`}>
+                          {fiiIsUp ? '+' : ''}₹{h.fiiNet.toFixed(2)} Cr
+                        </td>
+                        <td className={`py-2.5 px-3 text-right font-bold ${diiIsUp ? 'text-[#00E887]' : 'text-[#FF5959]'}`}>
+                          {diiIsUp ? '+' : ''}₹{h.diiNet.toFixed(2)} Cr
+                        </td>
+                        <td className={`py-2.5 px-3 text-right font-black text-sm ${totalIsUp ? 'text-[#00E887]' : 'text-[#FF5959]'}`}>
+                          {totalIsUp ? '+' : ''}₹{h.total.toFixed(2)} Cr
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className={`neopop-tag text-[10px] font-black ${
+                            totalIsUp ? 'bg-[#00E887] text-black' : 'bg-[#FF5959] text-white'
+                          }`}>
+                            {totalIsUp ? '🟢 STRONG ACCUMULATION' : '🔴 NET DISTRIBUTION'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
