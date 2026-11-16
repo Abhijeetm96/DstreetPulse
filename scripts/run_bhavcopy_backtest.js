@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Backtester } from '../src/backtester.js';
 
-const brainDir = 'C:\\Users\\abhij\\.gemini\\antigravity\\brain\\92ab32d3-0008-484e-b83a-09e26113ed64';
+const brainDir = './reports';
 const stepsDir = path.join(brainDir, '.system_generated', 'steps');
 
 function loadJson(stepNum) {

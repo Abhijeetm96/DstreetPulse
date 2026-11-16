@@ -24,7 +24,7 @@
     "risk-management",
     "backtesting"
   ],
-  "author": "Antigravity Engineering",
+  "author": "Abhijeet Kumar Mohanty",
   "license": "MIT",
   "dependencies": {
     "agentation": "^3.1.2",

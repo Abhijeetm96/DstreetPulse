@@ -5,7 +5,7 @@ const { resolve } = require('path');
 const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const DEBUG_PORT = 9348;
 const TARGET_URL = 'http://localhost:3000';
-const ARTIFACT_DIR = 'C:\\Users\\abhij\\.gemini\\antigravity\\brain\\92ab32d3-0008-484e-b83a-09e26113ed64';
+const ARTIFACT_DIR = './reports';
 
 async function run() {
   console.log('Launching headless Chrome for 5 Capabilities Verification...');
