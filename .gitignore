@@ -29,3 +29,7 @@ Thumbs.db
 # Headless Chrome temporary debug directories
 chrome_tmp_*
 **/chrome_tmp_*
+
+# Scratch directory
+scratch/
+

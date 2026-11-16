@@ -73,10 +73,15 @@ export default function StockComparisonTab({
     setError(null);
 
     const query = selectedSymbols.join(',');
-    fetch(`/api/compare?symbols=${encodeURIComponent(query)}`)
+    fetch(`./api/compare?symbols=${encodeURIComponent(query)}`)
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
+      })
+      .catch(async () => {
+        const fallback = await fetch('./data/compare.json');
+        if (!fallback.ok) throw new Error('Comparison data unavailable');
+        return fallback.json();
       })
       .then((data) => {
         setComparisonData(data);

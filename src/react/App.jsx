@@ -65,7 +65,16 @@ export default function App() {
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetch('/api/heatmaps');
+        let res = null;
+        try {
+          const apiRes = await fetch('./api/heatmaps');
+          if (apiRes.ok) res = apiRes;
+        } catch {
+          // Static host fallback
+        }
+        if (!res) {
+          res = await fetch('./data/heatmaps.json');
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         setData({
@@ -214,12 +223,14 @@ export default function App() {
   // 3. Real-Time 1-Second Price Streaming Engine (SSE)
   useEffect(() => {
     let es = null;
+    let failedAttempts = 0;
 
     function startStreaming() {
       try {
-        es = new EventSource('/api/stream-ticks');
+        es = new EventSource('./api/stream-ticks');
         es.onopen = () => {
           setIsStreaming(true);
+          failedAttempts = 0;
         };
 
         es.onmessage = (event) => {
@@ -352,7 +363,10 @@ export default function App() {
             es.close();
             es = null;
           }
-          setTimeout(startStreaming, 3000);
+          failedAttempts++;
+          if (failedAttempts < 2) {
+            setTimeout(startStreaming, 4000);
+          }
         };
       } catch (err) {
         console.error('SSE connect failed:', err);
@@ -369,7 +383,16 @@ export default function App() {
   const handleRefreshLive = async () => {
     setIsRefreshing(true);
     try {
-      const res = await fetch('/api/refresh-live');
+      let res = null;
+      try {
+        const apiRes = await fetch('./api/refresh-live');
+        if (apiRes.ok) res = apiRes;
+      } catch {
+        // static fallback
+      }
+      if (!res) {
+        res = await fetch('./data/heatmaps.json');
+      }
       if (res.ok) {
         const json = await res.json();
         if (json.catalog) {

@@ -33,7 +33,16 @@ export default function FiiDiiTab() {
     async function loadFiiDii(isInitial = false) {
       try {
         if (isInitial) setLoading(true);
-        const res = await fetch('/api/deals');
+        let res = null;
+        try {
+          const apiRes = await fetch('./api/deals');
+          if (apiRes.ok) res = apiRes;
+        } catch {
+          // static fallback
+        }
+        if (!res) {
+          res = await fetch('./data/deals.json');
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         if (isMounted) {

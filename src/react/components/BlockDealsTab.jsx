@@ -54,7 +54,16 @@ export default function BlockDealsTab({ onSelectStock }) {
         if (filterAction !== 'ALL') params.set('action', filterAction);
         if (searchQuery.trim()) params.set('q', searchQuery.trim());
 
-        const res = await fetch(`/api/deals?${params.toString()}`);
+        let res = null;
+        try {
+          const apiRes = await fetch(`./api/deals?${params.toString()}`);
+          if (apiRes.ok) res = apiRes;
+        } catch {
+          // static fallback
+        }
+        if (!res) {
+          res = await fetch('./data/deals.json');
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         if (isMounted) {
@@ -90,7 +99,13 @@ export default function BlockDealsTab({ onSelectStock }) {
   useEffect(() => {
     let evtSource;
     try {
-      evtSource = new EventSource('/api/stream-ticks');
+      evtSource = new EventSource('./api/stream-ticks');
+      evtSource.onerror = () => {
+        if (evtSource) {
+          evtSource.close();
+          evtSource = null;
+        }
+      };
       evtSource.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data);
