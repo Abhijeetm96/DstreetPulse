@@ -139,12 +139,10 @@ export default function App() {
       if (hash.startsWith('#compare')) {
         setSelectedStock(null);
         setActiveTab('compare');
-        if (hash.includes('stocks=')) {
-          const q = hash.split('stocks=')[1]?.split('&')[0];
-          if (q) {
-            const syms = q.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-            if (syms.length > 0) setComparisonSymbols(syms);
-          }
+        const qMatch = hash.match(/(?:stocks|symbols)=([^&]+)/);
+        if (qMatch && qMatch[1]) {
+          const syms = decodeURIComponent(qMatch[1]).split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+          if (syms.length > 0) setComparisonSymbols(syms);
         }
         return;
       }

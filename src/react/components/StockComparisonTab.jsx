@@ -24,6 +24,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { formatIndianCurrency, formatVolume } from '../utils/formatters.js';
+import { getPresetFileForSymbols, generateClientComparativeAnalysis } from '../lib/clientComparativeEngine.js';
 
 // High-contrast NeoPOP color palette for comparing up to 6 stocks
 export const STOCK_PALETTE = [
@@ -73,12 +74,36 @@ export default function StockComparisonTab({
     setError(null);
 
     const query = selectedSymbols.join(',');
+    const sortedKey = selectedSymbols.slice().sort().join(',');
+
     fetch(`./api/compare?symbols=${encodeURIComponent(query)}`)
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
       .catch(async () => {
+        // 1. Direct preset file match (e.g. compare_green_energy.json for ADANIGREEN,TATAPOWER,NTPC)
+        const presetFile = getPresetFileForSymbols(selectedSymbols);
+        if (presetFile) {
+          const pRes = await fetch(`./data/${presetFile}`).catch(() => null);
+          if (pRes && pRes.ok) {
+            return pRes.json();
+          }
+        }
+
+        // 2. Multi-preset catalog lookup
+        const presetsRes = await fetch('./data/compare_presets.json').catch(() => null);
+        if (presetsRes && presetsRes.ok) {
+          const presetsData = await presetsRes.json();
+          if (presetsData[query]) return presetsData[query];
+          if (presetsData[sortedKey]) return presetsData[sortedKey];
+        }
+
+        // 3. Client-side dynamic generator from constituents
+        const clientGen = generateClientComparativeAnalysis(selectedSymbols, constituents);
+        if (clientGen) return clientGen;
+
+        // 4. Default baseline fallback
         const fallback = await fetch('./data/compare.json');
         if (!fallback.ok) throw new Error('Comparison data unavailable');
         return fallback.json();
@@ -88,10 +113,16 @@ export default function StockComparisonTab({
         setLoading(false);
       })
       .catch((err) => {
-        setError(err.message);
+        console.error('Comparison load error:', err);
+        const fallbackGen = generateClientComparativeAnalysis(selectedSymbols, constituents);
+        if (fallbackGen) {
+          setComparisonData(fallbackGen);
+        } else {
+          setError(err.message);
+        }
         setLoading(false);
       });
-  }, [selectedSymbols.join(',')]);
+  }, [selectedSymbols.join(','), constituents?.length]);
 
   // Handle adding a stock to the basket
   const handleAddStock = (sym) => {
@@ -296,7 +327,9 @@ export default function StockComparisonTab({
             <span className="text-[11px] text-zinc-400 font-bold uppercase font-mono mr-1">Active Basket:</span>
             {selectedSymbols.map((sym, idx) => {
               const pal = STOCK_PALETTE[idx % STOCK_PALETTE.length];
-              const st = stocks.find(s => s.symbol === sym);
+              const st = stocks.find(s => s.symbol === sym) || (constituents || []).find(s => s.symbol === sym);
+              const ltpVal = st?.ltp;
+              const chgVal = st?.dayChangePct !== undefined ? st.dayChangePct : (st?.change_perc !== undefined ? st.change_perc : null);
               return (
                 <div
                   key={sym}
@@ -308,9 +341,9 @@ export default function StockComparisonTab({
                     style={{ backgroundColor: pal.stroke }}
                   />
                   <span>{sym}</span>
-                  {st && (
+                  {ltpVal !== undefined && (
                     <span className="text-[10px] text-zinc-400 font-normal">
-                      ₹{st.ltp} ({st.dayChangePct >= 0 ? '+' : ''}{st.dayChangePct.toFixed(1)}%)
+                      ₹{ltpVal} {chgVal !== null ? `(${chgVal >= 0 ? '+' : ''}${chgVal.toFixed(1)}%)` : ''}
                     </span>
                   )}
                   <button
@@ -819,8 +852,8 @@ export default function StockComparisonTab({
                     <td className="py-2.5 px-3 text-zinc-300 font-bold">Market Cap</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2.5 px-3 text-right text-white font-bold">
-                        ₹{st.fundamentals.mktCapCr.toLocaleString('en-IN')} Cr
-                        <span className="text-[10px] text-zinc-400 block">{st.fundamentals.mktCapCategory} CAP</span>
+                        ₹{(st.fundamentals?.mktCapCr ?? 0).toLocaleString('en-IN')} Cr
+                        <span className="text-[10px] text-zinc-400 block">{st.fundamentals?.mktCapCategory ?? 'LARGE'} CAP</span>
                       </td>
                     ))}
                   </tr>
@@ -831,9 +864,9 @@ export default function StockComparisonTab({
                       return (
                         <td key={st.symbol} className="py-2.5 px-3 text-right font-bold">
                           <span className={isBest ? 'bg-[#00E887] text-black px-1.5 py-0.5 rounded font-black' : 'text-white'}>
-                            {st.fundamentals.peRatio}x
+                            {st.fundamentals?.peRatio ?? '—'}x
                           </span>
-                          <span className="text-[10px] text-zinc-400 block font-normal">Ind: {st.fundamentals.industryPe}x</span>
+                          <span className="text-[10px] text-zinc-400 block font-normal">Ind: {st.fundamentals?.industryPe ?? '—'}x</span>
                         </td>
                       );
                     })}
@@ -842,7 +875,7 @@ export default function StockComparisonTab({
                     <td className="py-2.5 px-3 text-zinc-300 font-bold">P/B Ratio</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2.5 px-3 text-right text-zinc-200">
-                        {st.fundamentals.pbRatio}x
+                        {st.fundamentals?.pbRatio ?? '—'}x
                       </td>
                     ))}
                   </tr>
@@ -858,7 +891,7 @@ export default function StockComparisonTab({
                       return (
                         <td key={st.symbol} className="py-2.5 px-3 text-right font-bold">
                           <span className={isBest ? 'bg-[#00E887] text-black px-1.5 py-0.5 rounded font-black' : 'text-white'}>
-                            {st.fundamentals.roePct}%
+                            {st.fundamentals?.roePct ?? '—'}%
                           </span>
                         </td>
                       );
@@ -871,7 +904,7 @@ export default function StockComparisonTab({
                       return (
                         <td key={st.symbol} className="py-2.5 px-3 text-right font-bold">
                           <span className={isBest ? 'bg-[#00E887] text-black px-1.5 py-0.5 rounded font-black' : 'text-zinc-200'}>
-                            {st.financials.patMarginPct}%
+                            {st.financials?.patMarginPct ?? '—'}%
                           </span>
                         </td>
                       );
@@ -881,12 +914,13 @@ export default function StockComparisonTab({
                     <td className="py-2.5 px-3 text-zinc-300 font-bold">Debt-to-Equity Ratio</td>
                     {stocks.map(st => {
                       const isBest = winnerBadges?.lowestDebt?.symbol === st.symbol;
+                      const debt = st.fundamentals?.debtToEquity ?? 0;
                       return (
                         <td key={st.symbol} className="py-2.5 px-3 text-right font-bold">
-                          <span className={isBest ? 'bg-[#00E887] text-black px-1.5 py-0.5 rounded font-black' : st.fundamentals.debtToEquity > 1.5 ? 'text-[#FF5959]' : 'text-zinc-200'}>
-                            {st.fundamentals.debtToEquity}x
+                          <span className={isBest ? 'bg-[#00E887] text-black px-1.5 py-0.5 rounded font-black' : debt > 1.5 ? 'text-[#FF5959]' : 'text-zinc-200'}>
+                            {st.fundamentals?.debtToEquity ?? '—'}x
                           </span>
-                          <span className="text-[10px] text-zinc-400 block font-normal">{st.fundamentals.debtStatus}</span>
+                          <span className="text-[10px] text-zinc-400 block font-normal">{st.fundamentals?.debtStatus ?? 'NORMAL'}</span>
                         </td>
                       );
                     })}
@@ -900,9 +934,9 @@ export default function StockComparisonTab({
                     <td className="py-2.5 px-3 text-zinc-300 font-bold">Revenue TTM (YoY Growth)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2.5 px-3 text-right text-white font-bold">
-                        ₹{st.financials.revenueTtmCr.toLocaleString('en-IN')} Cr
-                        <span className={`text-[10px] block font-bold ${st.financials.revenueGrowthYoyPct >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}`}>
-                          {st.financials.revenueGrowthYoyPct >= 0 ? '+' : ''}{st.financials.revenueGrowthYoyPct}% YoY
+                        ₹{(st.financials?.revenueTtmCr ?? 0).toLocaleString('en-IN')} Cr
+                        <span className={`text-[10px] block font-bold ${(st.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}`}>
+                          {(st.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? '+' : ''}{st.financials?.revenueGrowthYoyPct ?? 0}% YoY
                         </span>
                       </td>
                     ))}
@@ -911,7 +945,7 @@ export default function StockComparisonTab({
                     <td className="py-2.5 px-3 text-zinc-300 font-bold">Net Profit / PAT TTM</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2.5 px-3 text-right text-[#00E887] font-bold">
-                        ₹{st.financials.patTtmCr.toLocaleString('en-IN')} Cr
+                        ₹{(st.financials?.patTtmCr ?? 0).toLocaleString('en-IN')} Cr
                       </td>
                     ))}
                   </tr>
@@ -1001,7 +1035,7 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">52-Week Range</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right text-zinc-200">
-                        ₹{st.technicals.low52w} → ₹{st.technicals.high52w}
+                        ₹{st.technicals?.low52w ?? '—'} → ₹{st.technicals?.high52w ?? '—'}
                       </td>
                     ))}
                   </tr>
@@ -1009,25 +1043,28 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Distance from 52W High</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right text-zinc-300">
-                        -{st.technicals.dist52wHighPct}%
+                        {st.technicals?.dist52wHighPct !== undefined ? `-${st.technicals.dist52wHighPct}%` : '—'}
                       </td>
                     ))}
                   </tr>
                   <tr>
                     <td className="py-2 px-3 text-zinc-300 font-bold">20 EMA / 50 SMA / 200 SMA Status</td>
-                    {stocks.map(st => (
-                      <td key={st.symbol} className="py-2 px-3 text-right font-bold">
-                        <span className={st.technicals.maSignal.includes('BULLISH') ? 'text-[#00E887]' : 'text-zinc-300'}>
-                          {st.technicals.maSignal}
-                        </span>
-                      </td>
-                    ))}
+                    {stocks.map(st => {
+                      const sig = st.technicals?.maSignal || 'NEUTRAL';
+                      return (
+                        <td key={st.symbol} className="py-2 px-3 text-right font-bold">
+                          <span className={sig.includes('BULLISH') ? 'text-[#00E887]' : 'text-zinc-300'}>
+                            {sig}
+                          </span>
+                        </td>
+                      );
+                    })}
                   </tr>
                   <tr>
                     <td className="py-2 px-3 text-zinc-300 font-bold">RSI (14-period)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right text-white font-bold">
-                        {st.technicals.rsi14}
+                        {st.technicals?.rsi14 ?? '—'}
                       </td>
                     ))}
                   </tr>
@@ -1035,7 +1072,7 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Beta (vs NIFTY 50)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right text-zinc-200">
-                        {st.technicals.beta}
+                        {st.technicals?.beta ?? '1.0'}
                       </td>
                     ))}
                   </tr>
@@ -1043,7 +1080,7 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Delivery %</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right text-zinc-200">
-                        {st.technicals.deliveryPct}%
+                        {st.technicals?.deliveryPct ?? '—'}%
                       </td>
                     ))}
                   </tr>
@@ -1051,7 +1088,7 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Regulatory Surveillance (ASM/GSM)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right font-bold">
-                        {st.technicals.isAsm ? (
+                        {st.technicals?.isAsm ? (
                           <span className="bg-[#FF5959] text-white px-2 py-0.5 rounded text-[10px]">
                             ⚠️ {st.technicals.asmGsmStatus}
                           </span>
@@ -1090,8 +1127,8 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Price-to-Earnings (P/E)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right font-bold text-white">
-                        {st.fundamentals.peRatio}x
-                        <span className="text-[10px] text-zinc-400 block font-normal">Ind: {st.fundamentals.industryPe}x ({st.fundamentals.peStatus})</span>
+                        {st.fundamentals?.peRatio ?? '—'}x
+                        <span className="text-[10px] text-zinc-400 block font-normal">Ind: {st.fundamentals?.industryPe ?? '—'}x {st.fundamentals?.peStatus ? `(${st.fundamentals.peStatus})` : ''}</span>
                       </td>
                     ))}
                   </tr>
@@ -1099,7 +1136,7 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Price-to-Book (P/B)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right text-zinc-200">
-                        {st.fundamentals.pbRatio}x
+                        {st.fundamentals?.pbRatio ?? '—'}x
                       </td>
                     ))}
                   </tr>
@@ -1107,7 +1144,7 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Dividend Yield</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right text-zinc-200">
-                        {st.fundamentals.divYieldPct}%
+                        {st.fundamentals?.divYieldPct ?? '0.0'}%
                       </td>
                     ))}
                   </tr>
@@ -1115,7 +1152,7 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Return on Equity (ROE)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right font-bold text-[#00E887]">
-                        {st.fundamentals.roePct}%
+                        {st.fundamentals?.roePct ?? '—'}%
                       </td>
                     ))}
                   </tr>
@@ -1123,7 +1160,7 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Return on Capital Employed (ROCE)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right font-bold text-[#00D8F6]">
-                        {st.fundamentals.rocePct}%
+                        {st.fundamentals?.rocePct ?? '—'}%
                       </td>
                     ))}
                   </tr>
@@ -1131,8 +1168,8 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Debt-to-Equity</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right font-bold">
-                        {st.fundamentals.debtToEquity}x
-                        <span className="text-[10px] text-zinc-400 block font-normal">{st.fundamentals.debtStatus}</span>
+                        {st.fundamentals?.debtToEquity ?? '—'}x
+                        <span className="text-[10px] text-zinc-400 block font-normal">{st.fundamentals?.debtStatus ?? 'NORMAL'}</span>
                       </td>
                     ))}
                   </tr>
@@ -1140,8 +1177,8 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Promoter Shareholding</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right text-white font-bold">
-                        {st.fundamentals.promoterHoldingPct}%
-                        {st.fundamentals.pledgedPromoterPct > 0 && (
+                        {st.fundamentals?.promoterHoldingPct ?? '—'}%
+                        {(st.fundamentals?.pledgedPromoterPct ?? 0) > 0 && (
                           <span className="text-[10px] text-[#FF5959] block font-normal">Pledged: {st.fundamentals.pledgedPromoterPct}%</span>
                         )}
                       </td>
@@ -1151,8 +1188,8 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Institutional Ownership (FII + DII)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right font-bold text-white">
-                        {st.fundamentals.institutionalHoldingPct}%
-                        <span className="text-[10px] text-zinc-400 block font-normal">FII: {st.fundamentals.fiiHoldingPct}% • DII: {st.fundamentals.diiHoldingPct}%</span>
+                        {st.fundamentals?.institutionalHoldingPct ?? '—'}%
+                        <span className="text-[10px] text-zinc-400 block font-normal">FII: {st.fundamentals?.fiiHoldingPct ?? '—'}% • DII: {st.fundamentals?.diiHoldingPct ?? '—'}%</span>
                       </td>
                     ))}
                   </tr>
@@ -1185,7 +1222,7 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Revenue TTM</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right text-white font-bold">
-                        ₹{st.financials.revenueTtmCr.toLocaleString('en-IN')} Cr
+                        ₹{(st.financials?.revenueTtmCr ?? 0).toLocaleString('en-IN')} Cr
                       </td>
                     ))}
                   </tr>
@@ -1193,8 +1230,8 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Revenue YoY Growth</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right font-bold">
-                        <span className={st.financials.revenueGrowthYoyPct >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}>
-                          {st.financials.revenueGrowthYoyPct >= 0 ? '+' : ''}{st.financials.revenueGrowthYoyPct}%
+                        <span className={(st.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}>
+                          {(st.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? '+' : ''}{st.financials?.revenueGrowthYoyPct ?? '0.0'}%
                         </span>
                       </td>
                     ))}
@@ -1203,8 +1240,8 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Operating Profit / EBITDA</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right text-white font-bold">
-                        ₹{st.financials.ebitdaCr.toLocaleString('en-IN')} Cr
-                        <span className="text-[10px] text-zinc-400 block font-normal">Margin: {st.financials.ebitdaMarginPct}%</span>
+                        ₹{(st.financials?.ebitdaCr ?? 0).toLocaleString('en-IN')} Cr
+                        <span className="text-[10px] text-zinc-400 block font-normal">Margin: {st.financials?.ebitdaMarginPct ?? '—'}%</span>
                       </td>
                     ))}
                   </tr>
@@ -1212,8 +1249,8 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Net Profit / PAT TTM</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right font-bold text-[#00E887]">
-                        ₹{st.financials.patTtmCr.toLocaleString('en-IN')} Cr
-                        <span className="text-[10px] text-zinc-400 block font-normal">PAT Margin: {st.financials.patMarginPct}%</span>
+                        ₹{(st.financials?.patTtmCr ?? 0).toLocaleString('en-IN')} Cr
+                        <span className="text-[10px] text-zinc-400 block font-normal">PAT Margin: {st.financials?.patMarginPct ?? '—'}%</span>
                       </td>
                     ))}
                   </tr>
@@ -1221,9 +1258,9 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">EPS TTM (Diluted)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right font-bold text-white">
-                        ₹{st.financials.epsTtm}
-                        <span className={`text-[10px] block font-normal ${st.financials.epsGrowthYoyPct >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}`}>
-                          ({st.financials.epsGrowthYoyPct >= 0 ? '+' : ''}{st.financials.epsGrowthYoyPct}% YoY)
+                        ₹{st.financials?.epsTtm ?? '—'}
+                        <span className={`text-[10px] block font-normal ${(st.financials?.epsGrowthYoyPct ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}`}>
+                          ({(st.financials?.epsGrowthYoyPct ?? 0) >= 0 ? '+' : ''}{st.financials?.epsGrowthYoyPct ?? '0.0'}% YoY)
                         </span>
                       </td>
                     ))}
@@ -1232,8 +1269,8 @@ export default function StockComparisonTab({
                     <td className="py-2 px-3 text-zinc-300 font-bold">Free Cash Flow (FCF)</td>
                     {stocks.map(st => (
                       <td key={st.symbol} className="py-2 px-3 text-right font-bold">
-                        <span className={st.financials.freeCashFlowCr >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}>
-                          ₹{st.financials.freeCashFlowCr.toLocaleString('en-IN')} Cr
+                        <span className={(st.financials?.freeCashFlowCr ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}>
+                          ₹{(st.financials?.freeCashFlowCr ?? 0).toLocaleString('en-IN')} Cr
                         </span>
                       </td>
                     ))}
