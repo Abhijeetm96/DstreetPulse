@@ -15,7 +15,7 @@ import { planExit } from './exit_planner.js';
 import { executePreFlightRiskGate } from './institutional_risk_gate.js';
 import { executeUnifiedDayTraderPipeline } from './skills_pipeline.js';
 import { getStockReturnsAndRolling } from './returns_engine.js';
-import { getComparativeAnalysis, COMPARISON_PRESETS } from './stock_fundamentals_engine.js';
+import { getComparativeAnalysis, getStockFundamentalsAndFinancials, COMPARISON_PRESETS } from './stock_fundamentals_engine.js';
 import {
   BLOCK_DEALS_DATA,
   BULK_DEALS_DATA,
@@ -1137,6 +1137,18 @@ const server = http.createServer((req, res) => {
       .then(data => sendJSON(res, data))
       .catch(err => sendJSON(res, { error: err.message, symbol: sym }, 500));
     return;
+  }
+
+  if (url.pathname === '/api/stock-fundamentals') {
+    const sym = (url.searchParams.get('symbol') || '').toUpperCase().trim();
+    if (!sym) return sendJSON(res, { error: 'Symbol parameter required' }, 400);
+
+    try {
+      const data = getStockFundamentalsAndFinancials(sym);
+      return sendJSON(res, data);
+    } catch (err) {
+      return sendJSON(res, { error: err.message, symbol: sym }, 500);
+    }
   }
 
   if (url.pathname === '/api/compare') {

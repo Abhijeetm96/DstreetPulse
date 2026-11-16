@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-16T12:51:08.214Z",
+  "timestamp": "2026-11-16T18:45:42.165Z",
   "indices_count": 43,
   "constituents_count": 499,
   "indices": [
@@ -26613,24 +26613,6 @@
       "perChange": -0.67
     },
     {
-      "symbol": "SUNPHARMA",
-      "series": "EQ",
-      "open_price": 1885,
-      "high_price": 1899.8,
-      "low_price": 1856.8,
-      "ltp": 1867.5,
-      "nearWKH": 8.764473105671993,
-      "nearWKL": -17.9200606175412,
-      "prev_price": 1880,
-      "net_price": -0.66,
-      "trade_quantity": "13.01 L",
-      "turnover": "244.12 Cr",
-      "market_type": "N",
-      "ca_ex_dt": "07-Jul-2026",
-      "ca_purpose": "Dividend - Rs 5 Per Share",
-      "perChange": -0.66
-    },
-    {
       "symbol": "JIOFIN",
       "series": "EQ",
       "open_price": 228,
@@ -26646,6 +26628,24 @@
       "market_type": "N",
       "ca_ex_dt": "10-Aug-2026",
       "ca_purpose": "Dividend - Rs 0.60 Per Share",
+      "perChange": -0.66
+    },
+    {
+      "symbol": "SUNPHARMA",
+      "series": "EQ",
+      "open_price": 1885,
+      "high_price": 1899.8,
+      "low_price": 1856.8,
+      "ltp": 1867.5,
+      "nearWKH": 8.764473105671993,
+      "nearWKL": -17.9200606175412,
+      "prev_price": 1880,
+      "net_price": -0.66,
+      "trade_quantity": "13.01 L",
+      "turnover": "244.12 Cr",
+      "market_type": "N",
+      "ca_ex_dt": "07-Jul-2026",
+      "ca_purpose": "Dividend - Rs 5 Per Share",
       "perChange": -0.66
     },
     {

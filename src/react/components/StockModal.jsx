@@ -40,6 +40,7 @@ import { formatIndianCurrency, formatVolume } from '../utils/formatters.js';
 import { computeStockDiagnostics, calculateStatutoryCharges } from '../utils/tradeCopilot.js';
 import { getMarketCap } from '../utils/mktCapRegistry.js';
 import { getAsmStatus } from '../utils/asmRegistry.js';
+import { getStockFundamentalsAndFinancials, generateClientStockReturns } from '../utils/stockFundamentals.js';
 
 export default function StockModal({
   stock,
@@ -48,12 +49,19 @@ export default function StockModal({
   allStocks = [],
   onNavigateStock
 }) {
-  const [activeTab, setActiveTab] = useState('copilot'); // 'copilot' | 'chart' | 'returns' | 'deals' | 'sizer' | 'ohlc'
+  const [activeTab, setActiveTab] = useState('copilot'); // 'copilot' | 'technicals' | 'fundamentals' | 'financials' | 'returns' | 'deals' | 'sizer' | 'ohlc'
   const [liveQuote, setLiveQuote] = useState(null);
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [ticketBroker, setTicketBroker] = useState('zerodha'); // 'zerodha' | 'nse_bracket' | 'alpaca'
   const [copiedTicket, setCopiedTicket] = useState(false);
+
+  // Synchronous client fallback for fundamentals & returns
+  const clientFundMeta = useMemo(() => getStockFundamentalsAndFinancials(stock), [stock?.symbol, stock?.ltp]);
+  const [serverFundMeta, setServerFundMeta] = useState(null);
+  const fundMeta = serverFundMeta || clientFundMeta;
+
+  const clientReturns = useMemo(() => generateClientStockReturns(stock), [stock?.symbol, stock?.ltp]);
 
   // Chart & Returns State
   const [returnsData, setReturnsData] = useState(null);
@@ -90,6 +98,17 @@ export default function StockModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose, onNavigateStock]);
 
+  // Fetch Fundamentals & Financials from server
+  useEffect(() => {
+    if (!stock?.symbol) return;
+    fetch(`./api/stock-fundamentals?symbol=${encodeURIComponent(stock.symbol)}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.fundamentals) setServerFundMeta(data);
+      })
+      .catch(() => {});
+  }, [stock?.symbol]);
+
   // Fetch Point-in-Time & Rolling Returns from institutional engine
   useEffect(() => {
     if (!stock?.symbol) return;
@@ -102,25 +121,18 @@ export default function StockModal({
         return res.json();
       })
       .then((data) => {
-        setReturnsData(data);
+        if (data && data.timeframeSeries) {
+          setReturnsData(data);
+        } else {
+          setReturnsData(clientReturns);
+        }
         setLoadingReturns(false);
       })
       .catch(() => {
-        // Fallback default calculation from stock object for static demo
-        setReturnsData({
-          symbol: stock.symbol,
-          returns: stock.returns || {
-            '1D': stock.change_perc || 0,
-            '1W': 1.25,
-            '1M': 3.40,
-            '3M': 7.80,
-            '6M': 14.20,
-            '1Y': 24.50
-          }
-        });
+        setReturnsData(clientReturns);
         setLoadingReturns(false);
       });
-  }, [stock?.symbol]);
+  }, [stock?.symbol, clientReturns]);
 
   // Fetch Smart Money & Institutional Deals for this specific stock
   useEffect(() => {
@@ -191,9 +203,10 @@ export default function StockModal({
     setTimeout(() => setCopiedTicket(false), 2000);
   };
 
-  // Active Rolling Return Data & Timeframe Data
-  const activeRolling = returnsData?.rolling?.[selectedWindow];
-  const activeTf = returnsData?.timeframeSeries?.[selectedWindow];
+  // Active Rolling Return Data & Timeframe Data with synchronous fallback
+  const activeReturns = returnsData || clientReturns;
+  const activeRolling = activeReturns?.rolling?.[selectedWindow];
+  const activeTf = activeReturns?.timeframeSeries?.[selectedWindow];
 
   // SVG Chart Dimensions & Computations
   const chartWidth = 1000;
@@ -225,6 +238,13 @@ export default function StockModal({
       startRefPrice = rawPoints[0].close;
       endRefPrice = rawPoints[rawPoints.length - 1].close;
       tfReturnPct = ((endRefPrice - startRefPrice) / startRefPrice) * 100;
+    } else if (clientReturns?.timeframeSeries?.[selectedWindow]?.points?.length > 0) {
+      const fbTf = clientReturns.timeframeSeries[selectedWindow];
+      rawPoints = fbTf.points;
+      startRefPrice = fbTf.startPrice;
+      endRefPrice = fbTf.endPrice;
+      tfReturnPct = fbTf.returnPct;
+      tfCagrPct = fbTf.cagrPct;
     } else {
       return null;
     }
@@ -339,7 +359,7 @@ export default function StockModal({
       startDate: rawPoints[0].date,
       endDate: rawPoints[rawPoints.length - 1].date
     };
-  }, [activeTf, activeRolling, ltp, chartHeight, chartHeightMode]);
+  }, [activeTf, activeRolling, clientReturns, selectedWindow, ltp, chartHeight, chartHeightMode]);
 
   // Total deals for this stock
   const dealsCount = (stockDeals?.blockDeals?.length || 0) + (stockDeals?.bulkDeals?.length || 0) + (stockDeals?.insiderTrades?.length || 0);
@@ -540,6 +560,133 @@ export default function StockModal({
               <span className="text-zinc-200 font-bold">
                 ₹{stock.low ? Number(stock.low).toFixed(1) : (ltp * 0.98).toFixed(1)} - ₹{stock.high ? Number(stock.high).toFixed(1) : (ltp * 1.02).toFixed(1)}
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Triple Matrix Snapshot: Fundamentals • Technicals • Financials */}
+        <div className="bg-[#111111] px-4 sm:px-6 py-3 border-b-2 border-black grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* 1. Fundamentals Card */}
+          <div
+            onClick={() => setActiveTab('fundamentals')}
+            className={`p-3 bg-[#181818] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000] cursor-pointer hover:border-[#FEE360] transition-colors ${
+              activeTab === 'fundamentals' ? 'ring-2 ring-[#FEE360]' : ''
+            }`}
+          >
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5 mb-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#FEE360] flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5" />
+                Fundamentals
+              </span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold">
+                {fundMeta?.fundamentals?.peStatus || 'FAIR'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+              <div>
+                <span className="text-[10px] text-zinc-400 block">P/E Ratio</span>
+                <span className="font-bold text-white">{fundMeta?.fundamentals?.peRatio ?? '—'}x</span>
+                <span className="text-[9px] text-zinc-500 block">Ind: {fundMeta?.fundamentals?.industryPe ?? '—'}x</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">P/B Ratio</span>
+                <span className="font-bold text-white">{fundMeta?.fundamentals?.pbRatio ?? '—'}x</span>
+                <span className="text-[9px] text-zinc-500 block">Yield: {fundMeta?.fundamentals?.divYieldPct ?? 0}%</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">ROE / ROCE</span>
+                <span className="font-bold text-[#00E887]">{fundMeta?.fundamentals?.roePct ?? '—'}% / {fundMeta?.fundamentals?.rocePct ?? '—'}%</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">Debt to Equity</span>
+                <span className="font-bold text-white">{fundMeta?.fundamentals?.debtToEquity ?? '—'}</span>
+                <span className="text-[9px] text-zinc-400 block">{fundMeta?.fundamentals?.debtStatus ?? '—'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Technicals Card */}
+          <div
+            onClick={() => setActiveTab('technicals')}
+            className={`p-3 bg-[#181818] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000] cursor-pointer hover:border-[#00E887] transition-colors ${
+              activeTab === 'technicals' ? 'ring-2 ring-[#00E887]' : ''
+            }`}
+          >
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5 mb-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#00E887] flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5" />
+                Technicals
+              </span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-bold ${
+                (fundMeta?.technicals?.maSignal || '').includes('BULLISH') ? 'bg-[#00E887]/20 text-[#00E887]' : 'bg-[#FF5959]/20 text-[#FF5959]'
+              }`}>
+                {fundMeta?.technicals?.setupGrade ? `Grade ${fundMeta.technicals.setupGrade}` : 'GRADE A'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+              <div>
+                <span className="text-[10px] text-zinc-400 block">20 EMA</span>
+                <span className="font-bold text-white">₹{fundMeta?.technicals?.ema20 ?? '—'}</span>
+                <span className="text-[9px] text-zinc-500 block">50 SMA: ₹{fundMeta?.technicals?.sma50 ?? '—'}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">14 RSI</span>
+                <span className={`font-bold ${(fundMeta?.technicals?.rsi14 ?? 50) >= 60 ? 'text-[#00E887]' : (fundMeta?.technicals?.rsi14 ?? 50) <= 40 ? 'text-[#FF5959]' : 'text-zinc-300'}`}>
+                  {fundMeta?.technicals?.rsi14 ?? '—'}
+                </span>
+                <span className="text-[9px] text-zinc-500 block">Beta: {fundMeta?.technicals?.beta ?? 1.0}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">MA Alignment</span>
+                <span className="font-bold text-white text-[11px] truncate block">{fundMeta?.technicals?.maSignal ?? 'BULLISH'}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">Delivery Purity</span>
+                <span className="font-bold text-[#00E887]">{fundMeta?.technicals?.deliveryPct ?? 50}%</span>
+                <span className="text-[9px] text-zinc-500 block">RVOL: {fundMeta?.technicals?.rvol ?? 1.0}x</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Financials Card */}
+          <div
+            onClick={() => setActiveTab('financials')}
+            className={`p-3 bg-[#181818] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000] cursor-pointer hover:border-[#69B4FF] transition-colors ${
+              activeTab === 'financials' ? 'ring-2 ring-[#69B4FF]' : ''
+            }`}
+          >
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5 mb-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#69B4FF] flex items-center gap-1.5">
+                <BarChart2 className="w-3.5 h-3.5" />
+                Financials
+              </span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold">
+                TTM Dossier
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+              <div>
+                <span className="text-[10px] text-zinc-400 block">Revenue (TTM)</span>
+                <span className="font-bold text-white">₹{(fundMeta?.financials?.revenueTtmCr ?? 0).toLocaleString('en-IN')} Cr</span>
+                <span className={`text-[9px] ${(fundMeta?.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}`}>
+                  {(fundMeta?.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? '+' : ''}{fundMeta?.financials?.revenueGrowthYoyPct ?? 0}% YoY
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">EBITDA / Margin</span>
+                <span className="font-bold text-white">₹{(fundMeta?.financials?.ebitdaCr ?? 0).toLocaleString('en-IN')} Cr</span>
+                <span className="text-[9px] text-zinc-400 block">{fundMeta?.financials?.ebitdaMarginPct ?? '—'}% Margin</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">PAT / Margin</span>
+                <span className="font-bold text-[#00E887]">₹{(fundMeta?.financials?.patTtmCr ?? 0).toLocaleString('en-IN')} Cr</span>
+                <span className="text-[9px] text-zinc-400 block">{fundMeta?.financials?.patMarginPct ?? '—'}% Margin</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">EPS / FCF</span>
+                <span className="font-bold text-white">₹{fundMeta?.financials?.epsTtm ?? '—'}</span>
+                <span className="text-[9px] text-zinc-400 block">FCF: ₹{(fundMeta?.financials?.freeCashFlowCr ?? 0).toLocaleString('en-IN')} Cr</span>
+              </div>
             </div>
           </div>
         </div>
@@ -887,6 +1034,33 @@ export default function StockModal({
             <span>Pre-Flight Copilot</span>
           </button>
           <button
+            onClick={() => setActiveTab('technicals')}
+            className={`neopop-btn text-xs px-3 py-1.5 flex items-center gap-1.5 ${
+              activeTab === 'technicals' ? 'neopop-btn-primary' : 'neopop-btn-dark'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5 shrink-0 text-[#00E887]" />
+            <span>Technicals</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('fundamentals')}
+            className={`neopop-btn text-xs px-3 py-1.5 flex items-center gap-1.5 ${
+              activeTab === 'fundamentals' ? 'neopop-btn-primary' : 'neopop-btn-dark'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5 shrink-0 text-[#FEE360]" />
+            <span>Fundamentals</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('financials')}
+            className={`neopop-btn text-xs px-3 py-1.5 flex items-center gap-1.5 ${
+              activeTab === 'financials' ? 'neopop-btn-primary' : 'neopop-btn-dark'
+            }`}
+          >
+            <BarChart2 className="w-3.5 h-3.5 shrink-0 text-[#69B4FF]" />
+            <span>Financials</span>
+          </button>
+          <button
             onClick={() => setActiveTab('returns')}
             className={`neopop-btn text-xs px-3 py-1.5 flex items-center gap-1.5 ${
               activeTab === 'returns' ? 'neopop-btn-primary' : 'neopop-btn-dark'
@@ -1134,6 +1308,443 @@ export default function StockModal({
                     </div>
                   );
                 })()}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: TECHNICALS */}
+          {activeTab === 'technicals' && (
+            <div className="space-y-4">
+              <div className="neopop-card p-4 sm:p-5 border-2 border-black bg-[#171717] rounded-[4px] shadow-[4px_4px_0px_#000000] space-y-4">
+                <div className="flex items-center justify-between border-b-2 border-black pb-3">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-[#00E887]" />
+                    <h4 className="text-xs font-black text-white uppercase tracking-wider neopop-caps">
+                      Institutional Technical Strength &amp; Trend Indicators
+                    </h4>
+                  </div>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-black border ${
+                    (fundMeta?.technicals?.maSignal || '').includes('BULLISH')
+                      ? 'bg-[#00E887]/20 text-[#00E887] border-[#00E887]/40'
+                      : 'bg-[#FF5959]/20 text-[#FF5959] border-[#FF5959]/40'
+                  }`}>
+                    {fundMeta?.technicals?.maSignal || 'BULLISH ALIGNMENT'}
+                  </span>
+                </div>
+
+                {/* 4 Technical Parameter Pillars */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">Moving Avg Trend</span>
+                    <span className="text-base font-black text-white font-mono mt-0.5 block truncate">
+                      {fundMeta?.technicals?.maSignal || 'BULLISH'}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 font-mono block mt-1">
+                      LTP {ltp >= (fundMeta?.technicals?.ema20 ?? ltp) ? 'above' : 'below'} 20 EMA
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">14-Day RSI (Momentum)</span>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className={`text-xl font-black font-mono ${
+                        (fundMeta?.technicals?.rsi14 ?? 50) >= 60 ? 'text-[#00E887]' : (fundMeta?.technicals?.rsi14 ?? 50) <= 40 ? 'text-[#FF5959]' : 'text-[#FEE360]'
+                      }`}>
+                        {fundMeta?.technicals?.rsi14 ?? '—'}
+                      </span>
+                      <span className="text-[10px] font-mono text-zinc-400">
+                        {(fundMeta?.technicals?.rsi14 ?? 50) >= 70 ? 'Overbought' : (fundMeta?.technicals?.rsi14 ?? 50) >= 55 ? 'Bullish Expansion' : (fundMeta?.technicals?.rsi14 ?? 50) <= 35 ? 'Oversold Dip' : 'Neutral Range'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">Delivery Purity</span>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className="text-xl font-black text-[#00E887] font-mono">
+                        {fundMeta?.technicals?.deliveryPct ?? 52.4}%
+                      </span>
+                      <span className="text-[10px] font-mono text-zinc-400">
+                        RVOL: {fundMeta?.technicals?.rvol ?? 1.15}x
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">Surveillance / ASM</span>
+                    <span className={`text-sm font-black font-mono mt-1 block truncate ${
+                      fundMeta?.technicals?.isAsm ? 'text-[#FF5959]' : 'text-[#00E887]'
+                    }`}>
+                      {fundMeta?.technicals?.asmGsmStatus || 'REGULAR TRADING'}
+                    </span>
+                    <span className="text-[9px] text-zinc-500 font-mono block">
+                      {fundMeta?.technicals?.isAsm ? '100% Margin Required' : 'Normal Margin Available'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Technical Detailed Matrix Table */}
+                <div className="border-2 border-black rounded-[4px] overflow-x-auto bg-[#141414]">
+                  <table className="w-full text-left border-collapse text-xs font-mono">
+                    <thead>
+                      <tr className="bg-[#1F1F1F] text-zinc-300 border-b-2 border-black">
+                        <th className="py-2.5 px-3 font-bold">Technical Metric</th>
+                        <th className="py-2.5 px-3 font-bold text-right">Value</th>
+                        <th className="py-2.5 px-3 font-bold text-right">Reference Level</th>
+                        <th className="py-2.5 px-3 font-bold text-right">Interpretation</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">20 Exponential Moving Average (EMA)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">₹{fundMeta?.technicals?.ema20 ?? '—'}</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">LTP: ₹{formatIndianCurrency(ltp)}</td>
+                        <td className="py-2.5 px-3 text-right">
+                          <span className={ltp >= (fundMeta?.technicals?.ema20 ?? ltp) ? 'text-[#00E887] font-bold' : 'text-[#FF5959] font-bold'}>
+                            {ltp >= (fundMeta?.technicals?.ema20 ?? ltp) ? 'Above 20 EMA (Bullish Anchor)' : 'Below 20 EMA (Caution)'}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">50 Simple Moving Average (SMA)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">₹{fundMeta?.technicals?.sma50 ?? '—'}</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">Intermediate Trend</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">
+                          {(fundMeta?.technicals?.ema20 ?? 0) >= (fundMeta?.technicals?.sma50 ?? 0) ? 'Short-term Trend Expanding' : 'Short-term Under Pressure'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">200 Simple Moving Average (SMA)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">₹{fundMeta?.technicals?.sma200 ?? '—'}</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">Long-Term Secular Base</td>
+                        <td className="py-2.5 px-3 text-right">
+                          <span className={ltp >= (fundMeta?.technicals?.sma200 ?? ltp) ? 'text-[#00E887] font-bold' : 'text-[#FF5959] font-bold'}>
+                            {ltp >= (fundMeta?.technicals?.sma200 ?? ltp) ? 'Bullish Secular Regime' : 'Bearish Secular Regime'}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">52-Week High &amp; Resistance</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-[#00E887]">₹{fundMeta?.technicals?.high52w ?? '—'}</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">
+                          {fundMeta?.technicals?.dist52wHighPct !== undefined ? `${fundMeta.technicals.dist52wHighPct}% from High` : '—'}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">
+                          {(fundMeta?.technicals?.dist52wHighPct ?? 0) <= 0 ? 'Fresh 52W Breakout High' : (fundMeta?.technicals?.dist52wHighPct ?? 0) <= 5 ? 'Near 52W High (<5%)' : 'Consolidating Below High'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">52-Week Low &amp; Support</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-[#FF5959]">₹{fundMeta?.technicals?.low52w ?? '—'}</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">52W Floor</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-zinc-300">
+                          +{(((ltp - (fundMeta?.technicals?.low52w ?? ltp)) / (fundMeta?.technicals?.low52w || 1)) * 100).toFixed(1)}% above 52W Low
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Beta (Market Sensitivity vs Nifty)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">{fundMeta?.technicals?.beta ?? '1.05'}</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">NIFTY 50 = 1.00</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-zinc-300">
+                          {(fundMeta?.technicals?.beta ?? 1) > 1.2 ? 'High Volatility Mover' : (fundMeta?.technicals?.beta ?? 1) >= 0.8 ? 'Balanced Systematic Beta' : 'Low Beta Defensive'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">20-Day Traded Volume Average</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">{formatVolume(fundMeta?.technicals?.avgVolume20d)}</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">Today: {formatVolume(stock.volume)}</td>
+                        <td className="py-2.5 px-3 text-right font-bold">
+                          <span className={(fundMeta?.technicals?.rvol ?? 1) >= 1.5 ? 'text-[#00E887]' : 'text-zinc-300'}>
+                            {(fundMeta?.technicals?.rvol ?? 1) >= 1.5 ? 'Institutional Volume Surge' : 'Standard Baseline Volume'}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: FUNDAMENTALS */}
+          {activeTab === 'fundamentals' && (
+            <div className="space-y-4">
+              <div className="neopop-card p-4 sm:p-5 border-2 border-black bg-[#171717] rounded-[4px] shadow-[4px_4px_0px_#000000] space-y-4">
+                <div className="flex items-center justify-between border-b-2 border-black pb-3">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-[#FEE360]" />
+                    <h4 className="text-xs font-black text-white uppercase tracking-wider neopop-caps">
+                      Fundamental Valuation &amp; Balance Sheet Health
+                    </h4>
+                  </div>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-black border ${
+                    fundMeta?.fundamentals?.peStatus === 'UNDERVALUED'
+                      ? 'bg-[#00E887]/20 text-[#00E887] border-[#00E887]/40'
+                      : fundMeta?.fundamentals?.peStatus === 'FAIR'
+                      ? 'bg-[#FEE360]/20 text-[#FEE360] border-[#FEE360]/40'
+                      : 'bg-[#FF5959]/20 text-[#FF5959] border-[#FF5959]/40'
+                  }`}>
+                    {fundMeta?.fundamentals?.peStatus || 'FAIR VALUATION'}
+                  </span>
+                </div>
+
+                {/* 4 Fundamental Snapshot Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">P/E Multiple</span>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className="text-xl font-black text-white font-mono">{fundMeta?.fundamentals?.peRatio ?? '—'}x</span>
+                      <span className="text-[10px] font-mono text-zinc-500">Sector: {fundMeta?.fundamentals?.industryPe ?? '—'}x</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-400 font-mono block mt-1">{fundMeta?.fundamentals?.peStatus ?? 'FAIR'}</span>
+                  </div>
+
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">Price to Book (P/B)</span>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className="text-xl font-black text-white font-mono">{fundMeta?.fundamentals?.pbRatio ?? '—'}x</span>
+                      <span className="text-[10px] font-mono text-zinc-500">Yield: {fundMeta?.fundamentals?.divYieldPct ?? 0}%</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">Capital Efficiency (ROE / ROCE)</span>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className="text-xl font-black text-[#00E887] font-mono">{fundMeta?.fundamentals?.roePct ?? '—'}%</span>
+                      <span className="text-[10px] font-mono text-zinc-400">ROCE: {fundMeta?.fundamentals?.rocePct ?? '—'}%</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">Debt to Equity</span>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className="text-xl font-black text-white font-mono">{fundMeta?.fundamentals?.debtToEquity ?? '—'}</span>
+                      <span className="text-[10px] font-mono text-[#00E887] font-bold">{fundMeta?.fundamentals?.debtStatus ?? 'LOW DEBT'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fundamentals Breakdown Table */}
+                <div className="border-2 border-black rounded-[4px] overflow-x-auto bg-[#141414]">
+                  <table className="w-full text-left border-collapse text-xs font-mono">
+                    <thead>
+                      <tr className="bg-[#1F1F1F] text-zinc-300 border-b-2 border-black">
+                        <th className="py-2.5 px-3 font-bold">Fundamental Parameter</th>
+                        <th className="py-2.5 px-3 font-bold text-right">Value</th>
+                        <th className="py-2.5 px-3 font-bold text-right">Industry Benchmark</th>
+                        <th className="py-2.5 px-3 font-bold text-right">Health Check</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Market Capitalization</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">₹{(fundMeta?.fundamentals?.mktCapCr ?? 0).toLocaleString('en-IN')} Cr</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">{fundMeta?.fundamentals?.mktCapLabel || 'Mid Cap'}</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-[#00E887]">Tier 1 SEBI Listed</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Price to Earnings (P/E)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">{fundMeta?.fundamentals?.peRatio ?? '—'}x</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">{fundMeta?.fundamentals?.industryPe ?? '—'}x (Industry Avg)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">{fundMeta?.fundamentals?.peStatus ?? 'FAIR'}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Price to Book (P/B)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">{fundMeta?.fundamentals?.pbRatio ?? '—'}x</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">Asset Backing Ratio</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-zinc-300">Sustainable Book Ratio</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Return on Equity (ROE)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-[#00E887]">{fundMeta?.fundamentals?.roePct ?? '—'}%</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">&gt;15.0% Ideal</td>
+                        <td className="py-2.5 px-3 text-right font-bold">
+                          <span className={(fundMeta?.fundamentals?.roePct ?? 0) >= 15 ? 'text-[#00E887]' : 'text-zinc-300'}>
+                            {(fundMeta?.fundamentals?.roePct ?? 0) >= 15 ? 'Superior Shareholder Compounding' : 'Moderate Return on Equity'}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Return on Capital Employed (ROCE)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-[#00E887]">{fundMeta?.fundamentals?.rocePct ?? '—'}%</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">&gt;18.0% Top Quartile</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-zinc-300">Total Capital Productivity</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Debt to Equity Ratio</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">{fundMeta?.fundamentals?.debtToEquity ?? '—'}</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">&lt;1.00 Desirable</td>
+                        <td className="py-2.5 px-3 text-right font-bold">
+                          <span className={(fundMeta?.fundamentals?.debtToEquity ?? 0) < 0.8 ? 'text-[#00E887]' : 'text-[#FEE360]'}>
+                            {fundMeta?.fundamentals?.debtStatus ?? 'HEALTHY LEVERAGE'}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Dividend Yield</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">{fundMeta?.fundamentals?.divYieldPct ?? 0}%</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">Cash Return</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-zinc-400">Annualized Dividend Distribution</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Promoter Shareholding</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">{fundMeta?.fundamentals?.promoterHoldingPct ?? '—'}%</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">
+                          Pledged: {fundMeta?.fundamentals?.pledgedPromoterPct ?? 0}%
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold">
+                          <span className={(fundMeta?.fundamentals?.pledgedPromoterPct ?? 0) === 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}>
+                            {(fundMeta?.fundamentals?.pledgedPromoterPct ?? 0) === 0 ? 'Zero Pledged Shares (Safe)' : `${fundMeta?.fundamentals?.pledgedPromoterPct}% Pledged Warning`}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Institutional Ownership (FII + DII)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-[#00E887]">{fundMeta?.fundamentals?.institutionalHoldingPct ?? '—'}%</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">
+                          FII: {fundMeta?.fundamentals?.fiiHoldingPct ?? '—'}% &bull; DII: {fundMeta?.fundamentals?.diiHoldingPct ?? '—'}%
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">Strong Institutional Base</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: FINANCIALS */}
+          {activeTab === 'financials' && (
+            <div className="space-y-4">
+              <div className="neopop-card p-4 sm:p-5 border-2 border-black bg-[#171717] rounded-[4px] shadow-[4px_4px_0px_#000000] space-y-4">
+                <div className="flex items-center justify-between border-b-2 border-black pb-3">
+                  <div className="flex items-center gap-2">
+                    <BarChart2 className="w-4 h-4 text-[#69B4FF]" />
+                    <h4 className="text-xs font-black text-white uppercase tracking-wider neopop-caps">
+                      Financial Performance, Earnings &amp; Cash Flow Dossier
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold border border-zinc-700">
+                    Trailing Twelve Months (TTM)
+                  </span>
+                </div>
+
+                {/* 4 Financial Key Stat Blocks */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">Annual Revenue (TTM)</span>
+                    <span className="text-xl font-black text-white font-mono mt-0.5 block">
+                      ₹{(fundMeta?.financials?.revenueTtmCr ?? 0).toLocaleString('en-IN')} Cr
+                    </span>
+                    <span className={`text-[10px] font-mono font-bold block mt-1 ${
+                      (fundMeta?.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'
+                    }`}>
+                      {(fundMeta?.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? '+' : ''}{fundMeta?.financials?.revenueGrowthYoyPct ?? 0}% YoY Growth
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">Operating Profit (EBITDA)</span>
+                    <span className="text-xl font-black text-white font-mono mt-0.5 block">
+                      ₹{(fundMeta?.financials?.ebitdaCr ?? 0).toLocaleString('en-IN')} Cr
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-mono block mt-1">
+                      Operating Margin: {fundMeta?.financials?.ebitdaMarginPct ?? '—'}%
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">Net Profit / PAT (TTM)</span>
+                    <span className="text-xl font-black text-[#00E887] font-mono mt-0.5 block">
+                      ₹{(fundMeta?.financials?.patTtmCr ?? 0).toLocaleString('en-IN')} Cr
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-mono block mt-1">
+                      PAT Margin: {fundMeta?.financials?.patMarginPct ?? '—'}%
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-[#111111] border-2 border-black rounded-[4px] shadow-[2px_2px_0px_#000000]">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold block">Diluted EPS (TTM)</span>
+                    <span className="text-xl font-black text-white font-mono mt-0.5 block">
+                      ₹{fundMeta?.financials?.epsTtm ?? '—'}
+                    </span>
+                    <span className={`text-[10px] font-mono font-bold block mt-1 ${
+                      (fundMeta?.financials?.epsGrowthYoyPct ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'
+                    }`}>
+                      {(fundMeta?.financials?.epsGrowthYoyPct ?? 0) >= 0 ? '+' : ''}{fundMeta?.financials?.epsGrowthYoyPct ?? 0}% YoY Growth
+                    </span>
+                  </div>
+                </div>
+
+                {/* Financial P&L Statement Table */}
+                <div className="border-2 border-black rounded-[4px] overflow-x-auto bg-[#141414]">
+                  <table className="w-full text-left border-collapse text-xs font-mono">
+                    <thead>
+                      <tr className="bg-[#1F1F1F] text-zinc-300 border-b-2 border-black">
+                        <th className="py-2.5 px-3 font-bold">Income Statement &amp; Cash Flow Metric</th>
+                        <th className="py-2.5 px-3 font-bold text-right">TTM Value</th>
+                        <th className="py-2.5 px-3 font-bold text-right">Growth / Margin</th>
+                        <th className="py-2.5 px-3 font-bold text-right">Performance Assessment</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Consolidated Revenue (TTM)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">₹{(fundMeta?.financials?.revenueTtmCr ?? 0).toLocaleString('en-IN')} Cr</td>
+                        <td className="py-2.5 px-3 text-right font-bold">
+                          <span className={(fundMeta?.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}>
+                            {(fundMeta?.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? '+' : ''}{fundMeta?.financials?.revenueGrowthYoyPct ?? 0}% YoY
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">
+                          {(fundMeta?.financials?.revenueGrowthYoyPct ?? 0) >= 15 ? 'Robust Top-Line Expansion' : (fundMeta?.financials?.revenueGrowthYoyPct ?? 0) >= 0 ? 'Steady Growth' : 'Top-Line Contraction'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Operating Profit (EBITDA)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">₹{(fundMeta?.financials?.ebitdaCr ?? 0).toLocaleString('en-IN')} Cr</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">Margin: {fundMeta?.financials?.ebitdaMarginPct ?? '—'}%</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">Core Operational Efficiency</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Net Profit / Profit After Tax (PAT)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-[#00E887]">₹{(fundMeta?.financials?.patTtmCr ?? 0).toLocaleString('en-IN')} Cr</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">PAT Margin: {fundMeta?.financials?.patMarginPct ?? '—'}%</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-[#00E887]">Positive Bottom-Line Return</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Diluted Earnings Per Share (EPS)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">₹{fundMeta?.financials?.epsTtm ?? '—'}</td>
+                        <td className="py-2.5 px-3 text-right font-bold">
+                          <span className={(fundMeta?.financials?.epsGrowthYoyPct ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}>
+                            {(fundMeta?.financials?.epsGrowthYoyPct ?? 0) >= 0 ? '+' : ''}{fundMeta?.financials?.epsGrowthYoyPct ?? 0}% YoY
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">Quality of Shareholder Accretion</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Free Cash Flow (FCF TTM)</td>
+                        <td className="py-2.5 px-3 text-right font-bold">
+                          <span className={(fundMeta?.financials?.freeCashFlowCr ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}>
+                            ₹{(fundMeta?.financials?.freeCashFlowCr ?? 0).toLocaleString('en-IN')} Cr
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">Operating Cash less Capex</td>
+                        <td className="py-2.5 px-3 text-right font-bold">
+                          <span className={(fundMeta?.financials?.freeCashFlowCr ?? 0) >= 0 ? 'text-[#00E887]' : 'text-[#FF5959]'}>
+                            {(fundMeta?.financials?.freeCashFlowCr ?? 0) >= 0 ? 'Strong Cash Generation' : 'Reinvestment / Negative FCF'}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 text-zinc-300 font-bold">Price to Sales (P/S Multiple)</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-white">{fundMeta?.financials?.priceToSales ?? '—'}x</td>
+                        <td className="py-2.5 px-3 text-right text-zinc-400">Revenue Multiplier</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-zinc-300">Sales Valuation Benchmark</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
