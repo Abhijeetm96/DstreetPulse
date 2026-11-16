@@ -33,3 +33,18 @@ chrome_tmp_*
 # Scratch directory
 scratch/
 
+# SQLite database lock/journal/temporary test files
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+data/test_journal.db
+
+# Test reports & benchmark outputs
+verification_*_report.json
+multi_page_ui_audit.json
+benchmark_*_results.json
+
+# Temporary & backup files
+*.bak
+*.tmp
+*.swp

@@ -116,4 +116,8 @@ async function handleCommand() {
   }
 }
 
-handleCommand().catch(console.error);
+handleCommand()
+  .catch(console.error)
+  .finally(() => {
+    journal.close();
+  });

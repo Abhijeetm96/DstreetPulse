@@ -43,7 +43,8 @@ const riskManager = new RiskManager(config);
 const paperTrader = new PaperTrader(config, journal);
 const validator = new DataValidator(config);
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // In-Memory Live Catalog & Real-Time Ticker State
 let liveCatalog = JSON.parse(readFileSync(new URL('./catalog_data.json', import.meta.url), 'utf8'));
@@ -782,13 +783,16 @@ const liveDataCache = {
 
 function sendJSON(res, data, statusCode = 200) {
   res.writeHead(statusCode, {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
     'Pragma': 'no-cache',
     'Expires': '0',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'SAMEORIGIN',
+    'Referrer-Policy': 'strict-origin-when-cross-origin'
   });
   res.end(JSON.stringify(data));
 }
@@ -799,12 +803,24 @@ const server = http.createServer((req, res) => {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'X-Content-Type-Options': 'nosniff'
     });
     return res.end();
   }
 
-  const url = new URL(req.url, `http://${req.headers.host}`);
+  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+
+  // Health check endpoint for container probes & monitoring
+  if (url.pathname === '/health' || url.pathname === '/api/health') {
+    return sendJSON(res, {
+      status: 'UP',
+      uptimeSeconds: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
+      service: 'indian-equity-swing-trading-intelligence',
+      version: '1.0.0'
+    });
+  }
 
   // API Endpoints
   if (url.pathname === '/api/status') {
@@ -1216,33 +1232,105 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Serve static files from /public
+  // Static file MIME Types Dictionary
+  const MIME_TYPES = {
+    '.html': 'text/html; charset=utf-8',
+    '.js': 'text/javascript; charset=utf-8',
+    '.mjs': 'text/javascript; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+    '.ico': 'image/x-icon',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2',
+    '.ttf': 'font/ttf',
+    '.txt': 'text/plain; charset=utf-8',
+    '.map': 'application/json; charset=utf-8'
+  };
+
+  // Serve static files from /public with directory traversal protection
   let reqPath = url.pathname;
   if (reqPath === '/' || reqPath === '/nse') reqPath = '/index.html';
-  let filePath = resolve(process.cwd(), 'public', reqPath.slice(1));
+
+  const publicDir = resolve(process.cwd(), 'public');
+  const sanitizedPath = reqPath.replace(/^\/+/, '');
+  const filePath = resolve(publicDir, sanitizedPath);
+
+  // Security: prevent directory traversal attacks
+  if (!filePath.startsWith(publicDir)) {
+    res.writeHead(403, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff'
+    });
+    return res.end('Forbidden');
+  }
+
   if (existsSync(filePath)) {
-    const ext = extname(filePath);
-    const contentType = {
-      '.html': 'text/html',
-      '.js': 'text/javascript',
-      '.css': 'text/css',
-      '.json': 'application/json'
-    }[ext] || 'text/plain';
+    const ext = extname(filePath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    const isHtml = ext === '.html';
 
     res.writeHead(200, {
       'Content-Type': contentType,
-      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-      'Pragma': 'no-cache',
-      'Expires': '0'
+      'Cache-Control': isHtml
+        ? 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
+        : 'public, max-age=31536000, immutable',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'SAMEORIGIN',
+      'Referrer-Policy': 'strict-origin-when-cross-origin'
     });
     res.end(readFileSync(filePath));
   } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
+    // Single Page App fallback for non-file client routes
+    const fallbackIndex = resolve(publicDir, 'index.html');
+    if (!extname(reqPath) && existsSync(fallbackIndex)) {
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'SAMEORIGIN'
+      });
+      res.end(readFileSync(fallbackIndex));
+    } else {
+      res.writeHead(404, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Content-Type-Options': 'nosniff'
+      });
+      res.end('Not Found');
+    }
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`>>> Indian Equity Swing Trading Frontend Server running at: http://localhost:${PORT}`);
+// Process-level unhandled exception guards
+process.on('unhandledRejection', (reason) => {
+  console.error('[CRITICAL] Unhandled Promise Rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[CRITICAL] Uncaught Exception:', err);
+});
+
+// Graceful server shutdown
+function gracefulShutdown(signal) {
+  console.log(`\n[Server] Received ${signal}. Initiating graceful shutdown...`);
+  server.close(() => {
+    journal.close();
+    console.log('[Server] HTTP listener and journal database connection closed cleanly.');
+    process.exit(0);
+  });
+  setTimeout(() => {
+    console.error('[Server] Graceful shutdown timed out. Forcing process exit.');
+    process.exit(1);
+  }, 5000).unref();
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+server.listen(PORT, HOST, () => {
+  console.log(`>>> Indian Equity Swing Trading Frontend Server running at: http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
 });
 

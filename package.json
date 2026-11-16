@@ -5,9 +5,11 @@
   "type": "module",
   "main": "src/cli.js",
   "scripts": {
+    "start": "node src/server.js",
     "build": "vite build",
     "dev": "vite",
     "test": "node --test tests/*.test.js",
+    "check": "node scripts/check_syntax.js",
     "ui": "node src/server.js",
     "scan": "node src/cli.js scan",
     "report": "node src/cli.js report",

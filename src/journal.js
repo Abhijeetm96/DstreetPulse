@@ -331,4 +331,15 @@ export class TradeJournal {
       discrepancies
     };
   }
+
+  /**
+   * Gracefully close SQLite database connection
+   */
+  close() {
+    try {
+      if (this.db) {
+        this.db.close();
+      }
+    } catch (_) {}
+  }
 }
