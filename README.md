@@ -1,6 +1,12 @@
-# Indian Equity Swing Trading Intelligence System
+# DstreetPulse — Indian Equity Swing Trading Terminal
 
-An AI-assisted, evidence-based swing trading research system built on Google Antigravity and the connected Official NSE Model Context Protocol (MCP) servers (`cm-market` and `nse-bhavcopy`).
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen?style=for-the-badge&logo=github)](https://abhijeetm96.github.io/DstreetPulse/)
+[![NSE MCP](https://img.shields.io/badge/NSE%20MCP-Connected-blue?style=for-the-badge)](https://github.com/Abhijeetm96/DstreetPulse)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
+> **Live Terminal App:** [https://abhijeetm96.github.io/DstreetPulse/](https://abhijeetm96.github.io/DstreetPulse/)
+
+An AI-assisted, evidence-based swing trading research system and terminal built on Google Antigravity and the connected Official NSE Model Context Protocol (MCP) servers (`cm-market` and `nse-bhavcopy`).
 
 Designed with strict adherence to **capital preservation**, **repeatable processes**, **transparent mathematical calculations**, and **zero look-ahead bias**.
 
