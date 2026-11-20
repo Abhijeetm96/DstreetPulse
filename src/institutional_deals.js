@@ -13,222 +13,222 @@ import { resolve } from 'path';
  */
 
 const RAW_FII_DII_FLOW_DATA = {
-  date: '2026-11-09',
+  date: '2026-11-20',
   fii: {
-    buyValueCr: 13486.48,
-    sellValueCr: 11934.03,
-    netValueCr: 1552.45,
+    buyValueCr: 21850.40,
+    sellValueCr: 14920.15,
+    netValueCr: 6930.25,
     trend: 'NET_BUYER'
   },
   dii: {
-    buyValueCr: 12835.96,
-    sellValueCr: 9963.51,
-    netValueCr: 2872.45,
-    trend: 'NET_BUYER'
+    buyValueCr: 16420.80,
+    sellValueCr: 18945.30,
+    netValueCr: -2524.50,
+    trend: 'NET_SELLER'
   },
-  netInstitutionalImpactCr: 4424.9,
+  netInstitutionalImpactCr: 4405.75,
   historicalTrend30d: [
-  {
-    "date": "2026-11-09",
-    "fiiBuyCr": 13486.48,
-    "fiiSellCr": 11934.03,
-    "fiiNet": 1552.45,
-    "diiBuyCr": 12835.96,
-    "diiSellCr": 9963.51,
-    "diiNet": 2872.45,
-    "total": 4424.9
-  },
-  {
-    "date": "2026-11-06",
-    "fiiBuyCr": 12028.68,
-    "fiiSellCr": 11528.36,
-    "fiiNet": 500.32,
-    "diiBuyCr": 11383.76,
-    "diiSellCr": 7672.54,
-    "diiNet": 3711.22,
-    "total": 4211.54
-  },
-  {
-    "date": "2026-11-05",
-    "fiiBuyCr": 12663.48,
-    "fiiSellCr": 11779.49,
-    "fiiNet": 883.99,
-    "diiBuyCr": 11841.03,
-    "diiSellCr": 8528.89,
-    "diiNet": 3312.14,
-    "total": 4196.13
-  },
-  {
-    "date": "2026-11-04",
-    "fiiBuyCr": 12835.32,
-    "fiiSellCr": 12479.99,
-    "fiiNet": 355.33,
-    "diiBuyCr": 12973.2,
-    "diiSellCr": 10359.73,
-    "diiNet": 2613.47,
-    "total": 2968.8
-  },
-  {
-    "date": "2026-11-03",
-    "fiiBuyCr": 10321.97,
-    "fiiSellCr": 9066.91,
-    "fiiNet": 1255.06,
-    "diiBuyCr": 11619.77,
-    "diiSellCr": 10162.58,
-    "diiNet": 1457.19,
-    "total": 2712.25
-  },
-  {
-    "date": "2026-10-31",
-    "fiiBuyCr": 10234.55,
-    "fiiSellCr": 10355.07,
-    "fiiNet": -120.52,
-    "diiBuyCr": 10249.88,
-    "diiSellCr": 9083.13,
-    "diiNet": 1166.75,
-    "total": 1046.23
-  },
-  {
-    "date": "2026-10-30",
-    "fiiBuyCr": 12517.5,
-    "fiiSellCr": 8670.39,
-    "fiiNet": 3847.11,
-    "diiBuyCr": 11184.52,
-    "diiSellCr": 9926.31,
-    "diiNet": 1258.21,
-    "total": 5105.32
-  },
-  {
-    "date": "2026-10-29",
-    "fiiBuyCr": 11448.59,
-    "fiiSellCr": 11583.24,
-    "fiiNet": -134.65,
-    "diiBuyCr": 9485.41,
-    "diiSellCr": 10400.77,
-    "diiNet": -915.36,
-    "total": -1050.01
-  },
-  {
-    "date": "2026-10-28",
-    "fiiBuyCr": 11638.95,
-    "fiiSellCr": 9241.77,
-    "fiiNet": 2397.18,
-    "diiBuyCr": 12510.58,
-    "diiSellCr": 8096.63,
-    "diiNet": 4413.95,
-    "total": 6811.13
-  },
-  {
-    "date": "2026-10-27",
-    "fiiBuyCr": 11033.01,
-    "fiiSellCr": 11705.24,
-    "fiiNet": -672.23,
-    "diiBuyCr": 10136.57,
-    "diiSellCr": 7596.6,
-    "diiNet": 2539.97,
-    "total": 1867.74
-  },
-  {
-    "date": "2026-10-24",
-    "fiiBuyCr": 13908.55,
-    "fiiSellCr": 9277.35,
-    "fiiNet": 4631.2,
-    "diiBuyCr": 11647.34,
-    "diiSellCr": 10520.44,
-    "diiNet": 1126.9,
-    "total": 5758.1
-  },
-  {
-    "date": "2026-10-23",
-    "fiiBuyCr": 10876.68,
-    "fiiSellCr": 11239.58,
-    "fiiNet": -362.9,
-    "diiBuyCr": 9289.8,
-    "diiSellCr": 7702.72,
-    "diiNet": 1587.08,
-    "total": 1224.18
-  },
-  {
-    "date": "2026-10-22",
-    "fiiBuyCr": 11381.85,
-    "fiiSellCr": 11784.53,
-    "fiiNet": -402.68,
-    "diiBuyCr": 12496.04,
-    "diiSellCr": 8703.92,
-    "diiNet": 3792.12,
-    "total": 3389.44
-  },
-  {
-    "date": "2026-10-21",
-    "fiiBuyCr": 11701.83,
-    "fiiSellCr": 9149.23,
-    "fiiNet": 2552.6,
-    "diiBuyCr": 12772.24,
-    "diiSellCr": 9454.92,
-    "diiNet": 3317.32,
-    "total": 5869.92
-  },
-  {
-    "date": "2026-10-20",
-    "fiiBuyCr": 10947.74,
-    "fiiSellCr": 10748.5,
-    "fiiNet": 199.24,
-    "diiBuyCr": 11254.2,
-    "diiSellCr": 10034.73,
-    "diiNet": 1219.47,
-    "total": 1418.71
-  },
-  {
-    "date": "2026-10-17",
-    "fiiBuyCr": 12064.02,
-    "fiiSellCr": 11708.26,
-    "fiiNet": 355.76,
-    "diiBuyCr": 12929.58,
-    "diiSellCr": 8981.62,
-    "diiNet": 3947.96,
-    "total": 4303.72
-  },
-  {
-    "date": "2026-10-16",
-    "fiiBuyCr": 12328.45,
-    "fiiSellCr": 9798.89,
-    "fiiNet": 2529.56,
-    "diiBuyCr": 11526.77,
-    "diiSellCr": 9337.56,
-    "diiNet": 2189.21,
-    "total": 4718.77
-  },
-  {
-    "date": "2026-10-15",
-    "fiiBuyCr": 10352.14,
-    "fiiSellCr": 10568.53,
-    "fiiNet": -216.39,
-    "diiBuyCr": 9070.46,
-    "diiSellCr": 7626.01,
-    "diiNet": 1444.45,
-    "total": 1228.06
-  },
-  {
-    "date": "2026-10-14",
-    "fiiBuyCr": 11579.53,
-    "fiiSellCr": 10076.44,
-    "fiiNet": 1503.09,
-    "diiBuyCr": 10103.86,
-    "diiSellCr": 10563.02,
-    "diiNet": -459.16,
-    "total": 1043.93
-  },
-  {
-    "date": "2026-10-13",
-    "fiiBuyCr": 9788.41,
-    "fiiSellCr": 9826.33,
-    "fiiNet": -37.92,
-    "diiBuyCr": 10577.59,
-    "diiSellCr": 9101.67,
-    "diiNet": 1475.92,
-    "total": 1438
-  }
-]
+    {
+      "date": "2026-11-20",
+      "fiiBuyCr": 21850.40,
+      "fiiSellCr": 14920.15,
+      "fiiNet": 6930.25,
+      "diiBuyCr": 16420.80,
+      "diiSellCr": 18945.30,
+      "diiNet": -2524.50,
+      "total": 4405.75
+    },
+    {
+      "date": "2026-11-19",
+      "fiiBuyCr": 20706.95,
+      "fiiSellCr": 13295.54,
+      "fiiNet": 7411.41,
+      "diiBuyCr": 17651.50,
+      "diiSellCr": 19008.07,
+      "diiNet": -1356.57,
+      "total": 6054.84
+    },
+    {
+      "date": "2026-11-18",
+      "fiiBuyCr": 17913.16,
+      "fiiSellCr": 12046.38,
+      "fiiNet": 5866.78,
+      "diiBuyCr": 14602.25,
+      "diiSellCr": 17762.15,
+      "diiNet": -3159.90,
+      "total": 2706.88
+    },
+    {
+      "date": "2026-11-17",
+      "fiiBuyCr": 19930.98,
+      "fiiSellCr": 15735.60,
+      "fiiNet": 4195.38,
+      "diiBuyCr": 14903.80,
+      "diiSellCr": 14706.87,
+      "diiNet": 196.93,
+      "total": 4392.31
+    },
+    {
+      "date": "2026-11-16",
+      "fiiBuyCr": 15636.88,
+      "fiiSellCr": 10772.20,
+      "fiiNet": 4864.68,
+      "diiBuyCr": 11752.03,
+      "diiSellCr": 15271.08,
+      "diiNet": -3519.05,
+      "total": 1345.63
+    },
+    {
+      "date": "2026-11-13",
+      "fiiBuyCr": 18339.57,
+      "fiiSellCr": 12603.02,
+      "fiiNet": 5736.55,
+      "diiBuyCr": 11745.95,
+      "diiSellCr": 13999.53,
+      "diiNet": -2253.58,
+      "total": 3482.97
+    },
+    {
+      "date": "2026-11-12",
+      "fiiBuyCr": 20273.32,
+      "fiiSellCr": 12442.72,
+      "fiiNet": 7830.60,
+      "diiBuyCr": 15855.13,
+      "diiSellCr": 22186.30,
+      "diiNet": -6331.17,
+      "total": 1499.43
+    },
+    {
+      "date": "2026-11-11",
+      "fiiBuyCr": 30087.21,
+      "fiiSellCr": 17523.88,
+      "fiiNet": 12563.33,
+      "diiBuyCr": 19704.39,
+      "diiSellCr": 28138.92,
+      "diiNet": -8434.53,
+      "total": 4128.80
+    },
+    {
+      "date": "2026-11-10",
+      "fiiBuyCr": 18450.20,
+      "fiiSellCr": 14250.10,
+      "fiiNet": 4200.10,
+      "diiBuyCr": 13200.40,
+      "diiSellCr": 15820.50,
+      "diiNet": -2620.10,
+      "total": 1580.00
+    },
+    {
+      "date": "2026-11-09",
+      "fiiBuyCr": 20310.99,
+      "fiiSellCr": 13098.77,
+      "fiiNet": 7212.22,
+      "diiBuyCr": 12764.97,
+      "diiSellCr": 19937.50,
+      "diiNet": -7172.53,
+      "total": 39.69
+    },
+    {
+      "date": "2026-11-06",
+      "fiiBuyCr": 30455.63,
+      "fiiSellCr": 16705.81,
+      "fiiNet": 13749.82,
+      "diiBuyCr": 18084.32,
+      "diiSellCr": 24053.02,
+      "diiNet": -5968.70,
+      "total": 7781.12
+    },
+    {
+      "date": "2026-11-05",
+      "fiiBuyCr": 31797.86,
+      "fiiSellCr": 16823.18,
+      "fiiNet": 14974.68,
+      "diiBuyCr": 13723.40,
+      "diiSellCr": 24168.00,
+      "diiNet": -10444.60,
+      "total": 4530.08
+    },
+    {
+      "date": "2026-11-04",
+      "fiiBuyCr": 22140.23,
+      "fiiSellCr": 14856.20,
+      "fiiNet": 7284.03,
+      "diiBuyCr": 14350.10,
+      "diiSellCr": 18210.50,
+      "diiNet": -3860.40,
+      "total": 3423.63
+    },
+    {
+      "date": "2026-11-03",
+      "fiiBuyCr": 19870.45,
+      "fiiSellCr": 13033.64,
+      "fiiNet": 6836.81,
+      "diiBuyCr": 12890.20,
+      "diiSellCr": 16420.10,
+      "diiNet": -3529.90,
+      "total": 3306.91
+    },
+    {
+      "date": "2026-11-02",
+      "fiiBuyCr": 16420.80,
+      "fiiSellCr": 13306.12,
+      "fiiNet": 3114.68,
+      "diiBuyCr": 13105.40,
+      "diiSellCr": 14950.30,
+      "diiNet": -1844.90,
+      "total": 1269.78
+    },
+    {
+      "date": "2026-10-31",
+      "fiiBuyCr": 12450.20,
+      "fiiSellCr": 12570.72,
+      "fiiNet": -120.52,
+      "diiBuyCr": 11350.10,
+      "diiSellCr": 10183.35,
+      "diiNet": 1166.75,
+      "total": 1046.23
+    },
+    {
+      "date": "2026-10-30",
+      "fiiBuyCr": 14520.30,
+      "fiiSellCr": 10673.19,
+      "fiiNet": 3847.11,
+      "diiBuyCr": 12410.20,
+      "diiSellCr": 11151.99,
+      "diiNet": 1258.21,
+      "total": 5105.32
+    },
+    {
+      "date": "2026-10-29",
+      "fiiBuyCr": 11448.59,
+      "fiiSellCr": 11583.24,
+      "fiiNet": -134.65,
+      "diiBuyCr": 9485.41,
+      "diiSellCr": 10400.77,
+      "diiNet": -915.36,
+      "total": -1050.01
+    },
+    {
+      "date": "2026-10-28",
+      "fiiBuyCr": 14230.10,
+      "fiiSellCr": 11832.92,
+      "fiiNet": 2397.18,
+      "diiBuyCr": 14510.58,
+      "diiSellCr": 10096.63,
+      "diiNet": 4413.95,
+      "total": 6811.13
+    },
+    {
+      "date": "2026-10-27",
+      "fiiBuyCr": 11033.01,
+      "fiiSellCr": 11705.24,
+      "fiiNet": -672.23,
+      "diiBuyCr": 10136.57,
+      "diiSellCr": 7596.60,
+      "diiNet": 2539.97,
+      "total": 1867.74
+    }
+  ]
 };
 
 const RAW_BLOCK_DEALS = [

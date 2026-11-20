@@ -21,6 +21,12 @@ function getCatalog() {
 
 // Curated Audited Metrics for prominent benchmark leaders
 const BENCHMARK_FUNDAMENTALS = {
+  'KALYANKJIL': {
+    peRatio: 42.5, industryPe: 38.5, pbRatio: 5.8, divYieldPct: 0.25, roePct: 15.8, rocePct: 18.2,
+    debtToEquity: 0.65, promoterHoldingPct: 62.85, institutionalHoldingPct: 28.24, fiiHoldingPct: 13.83, diiHoldingPct: 14.41, pledgedPromoterPct: 0.0,
+    revenueTtmCr: 39063, revenueGrowthYoyPct: 34.5, ebitdaCr: 2450, ebitdaMarginPct: 6.27, patTtmCr: 1512, patMarginPct: 3.87,
+    epsTtm: 15.0, epsGrowthYoyPct: 35.8, freeCashFlowCr: 850, priceToSales: 1.68
+  },
   'TCS': {
     peRatio: 30.2, industryPe: 27.5, pbRatio: 14.5, divYieldPct: 1.35, roePct: 48.2, rocePct: 61.5,
     debtToEquity: 0.00, promoterHoldingPct: 71.8, institutionalHoldingPct: 22.7, fiiHoldingPct: 12.5, diiHoldingPct: 10.2, pledgedPromoterPct: 0.0,
