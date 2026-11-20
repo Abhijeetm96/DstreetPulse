@@ -569,11 +569,16 @@ function broadcastLiveTicks() {
     const stock = liveCatalog.constituents[idx];
     if (!stock) continue;
 
-    // Minimum tick size in NSE is ₹0.05
-    const steps = (Math.floor(Math.random() * 4) + 1) * (Math.random() > 0.48 ? 1 : -1);
-    const delta = steps * 0.05;
+    // Controlled micro-tick anchored to official exchange settlement/quote
+    const anchorLtp = stock.anchor_ltp || stock.ltp;
+    if (!stock.anchor_ltp) stock.anchor_ltp = stock.ltp;
+
+    const maxOffset = Math.max(0.10, anchorLtp * 0.0015);
+    const steps = (Math.floor(Math.random() * 3) - 1) * 0.05;
+    const currentOffset = (stock.ltp || anchorLtp) - anchorLtp;
+    const newOffset = Math.max(-maxOffset, Math.min(maxOffset, currentOffset + steps));
     const oldLtp = stock.ltp;
-    const newLtp = Math.max(0.05, Number((stock.ltp + delta).toFixed(2)));
+    const newLtp = Math.max(0.05, Number((anchorLtp + newOffset).toFixed(2)));
     const dir = newLtp >= oldLtp ? 'up' : 'down';
     
     stock.ltp = newLtp;
@@ -622,15 +627,23 @@ function broadcastLiveTicks() {
     for (const idxPos of targetIndexSet) {
       const idxObj = liveCatalog.indices[idxPos];
       if (idxObj) {
-        const step = (Math.random() * 4.5 - 2.2);
-        idxObj.ltp = Number((idxObj.ltp + step).toFixed(2));
+        const anchorLtp = idxObj.anchor_ltp || idxObj.ltp;
+        if (!idxObj.anchor_ltp) idxObj.anchor_ltp = idxObj.ltp;
+
+        const maxOffset = Math.max(1.0, anchorLtp * 0.0008);
+        const step = (Math.random() * 2.0 - 1.0);
+        const currentOffset = (idxObj.ltp || anchorLtp) - anchorLtp;
+        const newOffset = Math.max(-maxOffset, Math.min(maxOffset, currentOffset + step));
+        const newIdxLtp = Number((anchorLtp + newOffset).toFixed(2));
+        const dir = newIdxLtp >= idxObj.ltp ? 'up' : 'down';
+        idxObj.ltp = newIdxLtp;
         const prev = idxObj.previous_close || idxObj.prev_close || idxObj.ltp;
         idxObj.change_perc = Number((((idxObj.ltp - prev) / prev) * 100).toFixed(2));
         tickedIndices.push({
           name: idxObj.name,
           ltp: idxObj.ltp,
           change_perc: idxObj.change_perc,
-          dir: step >= 0 ? 'up' : 'down'
+          dir
         });
       }
     }
